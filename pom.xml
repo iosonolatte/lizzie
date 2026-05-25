@@ -11,6 +11,8 @@
     <properties>
         <!-- Prevent warning: "[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!"-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <build>
@@ -18,10 +20,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.13.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
                     <compilerArgs>
                       <arg>-Xlint:all</arg>
                     </compilerArgs>
@@ -30,13 +31,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.4.1</version>
                 <!-- No need to specify the main class since maven-shade-plugin will add it. -->
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -58,11 +59,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.9</version>
+                <version>3.2.5</version>
                 <configuration>
                     <!-- Required to get the test failure reports in stdout -->
                     <useFile>false</useFile>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
             <plugin>
@@ -115,14 +115,14 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20180130</version>
+            <version>20240303</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/junit/junit -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
 
@@ -143,18 +143,18 @@
         <dependency>
             <groupId>org.java-websocket</groupId>
             <artifactId>Java-WebSocket</artifactId>
-            <version>1.5.0</version>
+            <version>1.5.7</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.36</version>
         </dependency>
 
         <dependency>
             <groupId>io.socket</groupId>
             <artifactId>socket.io-client</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,0 +1,43 @@
+name: Build
+
+"on":
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    name: Build & Test (JDK ${{ matrix.java }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        java: [ '11', '17', '21' ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+
+      - name: Verify formatting
+        run: mvn -B com.coveo:fmt-maven-plugin:check
+
+      - name: Build & test
+        run: mvn -B clean package
+
+      - name: Upload shaded jar
+        if: matrix.os == 'ubuntu-latest' && matrix.java == '11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lizzie-shaded-jar
+          path: target/lizzie-*-shaded.jar
+          if-no-files-found: error
