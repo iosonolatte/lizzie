@@ -15,7 +15,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.util.List;
 
 /** The window used to display the game. */
 public class SubBoardPane extends LizziePane {
@@ -160,7 +160,7 @@ public class SubBoardPane extends LizziePane {
     subBoardRenderer.removeEstimateRect();
   }
 
-  public void drawEstimateRect(ArrayList<Double> estimateArray, boolean isZen) {
+  public void drawEstimateRect(List<Double> estimateArray, boolean isZen) {
     subBoardRenderer.drawEstimateRect(estimateArray, isZen);
   }
 

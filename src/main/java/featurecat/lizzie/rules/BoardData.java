@@ -4,11 +4,11 @@ import featurecat.lizzie.Lizzie;
 import featurecat.lizzie.analysis.Leelaz;
 import featurecat.lizzie.analysis.MoveData;
 import featurecat.lizzie.util.Utils;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BoardData {
   public int moveNumber;
@@ -69,7 +69,7 @@ public class BoardData {
     this.scoreMean = scoreMean;
     this.blackCaptures = blackCaptures;
     this.whiteCaptures = whiteCaptures;
-    this.bestMoves = new ArrayList<>();
+    this.bestMoves = new CopyOnWriteArrayList<>();
   }
 
   public static BoardData empty(int width, int height) {
@@ -175,7 +175,7 @@ public class BoardData {
   }
 
   public void tryToClearBestMoves() {
-    bestMoves = new ArrayList<>();
+    bestMoves = new CopyOnWriteArrayList<>();
     playouts = 0;
     engineIndex = Leelaz.engineIndex;
     komi = Lizzie.board.getHistory().getGameInfo().getKomi();

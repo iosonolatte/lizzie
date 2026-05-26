@@ -7,6 +7,7 @@ import featurecat.lizzie.gui.LizzieFrame;
 import featurecat.lizzie.gui.LizzieMain;
 import featurecat.lizzie.gui.MainFrame;
 import featurecat.lizzie.rules.Board;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.JOptionPane;
@@ -20,12 +21,14 @@ public class Lizzie {
   public static GtpConsolePane gtpConsole;
   public static Board board;
   public static Leelaz leelaz;
-  public static String lizzieVersion = "0.7.4";
+  public static String lizzieVersion = "0.7.5";
   private static String[] mainArgs;
   public static EngineManager engineManager;
 
   /** Launches the game window, and runs the game. */
   public static void main(String[] args) throws IOException {
+    // Enable HiDPI scaling for modern displays (Retina, 4K, etc.)
+    enableHiDPI();
     setLookAndFeel();
     mainArgs = args;
     config = new Config();
@@ -33,6 +36,29 @@ public class Lizzie {
     gtpConsole = new GtpConsolePane(frame);
     gtpConsole.setVisible(config.leelazConfig.optBoolean("print-comms", false));
     initializeEngineManager();
+  }
+
+  /**
+   * Auto-detect display DPI and configure Java 2D scaling for HiDPI/Retina displays. On systems
+   * with >144 DPI, sets the UI scale factor to prevent tiny UI elements.
+   */
+  private static void enableHiDPI() {
+    try {
+      int dpi = Toolkit.getDefaultToolkit().getScreenResolution();
+      if (dpi >= 192) {
+        // For 4K+ displays (192+ DPI), set 2x scaling
+        System.setProperty("sun.java2d.uiScale", "2");
+      } else if (dpi >= 144) {
+        // For QHD+ displays (144+ DPI), set 1.5x scaling
+        System.setProperty("sun.java2d.uiScale", "1.5");
+      }
+      // For macOS Retina, Java 9+ handles this automatically via
+      // sun.java2d.uiScale.enabled, but we ensure it's on
+      System.setProperty("sun.java2d.uiScale.enabled", "true");
+      System.setProperty("sun.java2d.dpiaware", "true");
+    } catch (Exception e) {
+      // If DPI detection fails, proceed without custom scaling
+    }
   }
 
   public static void initializeEngineManager() {

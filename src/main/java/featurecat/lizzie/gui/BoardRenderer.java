@@ -1794,7 +1794,7 @@ public class BoardRenderer {
 
   // isZen: estimates are for black (Zen) rather than player to move (KataGo)
   // and estimates are just <0/=0/>0 (Zen) rather than -1..+1 (KataGo)
-  public void drawEstimateRect(ArrayList<Double> estimateArray, boolean isZen) {
+  public void drawEstimateRect(List<Double> estimateArray, boolean isZen) {
     if (boardWidth <= 0 || boardHeight <= 0) {
       return;
     }
@@ -1838,7 +1838,13 @@ public class BoardRenderer {
     BufferedImage newLargeRectImage = new BufferedImage(boardWidth, boardHeight, TYPE_INT_ARGB);
     BufferedImage newSmallRectImage = new BufferedImage(boardWidth, boardHeight, TYPE_INT_ARGB);
     Graphics2D gl = newLargeRectImage.createGraphics();
+    gl.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     Graphics2D gs = newSmallRectImage.createGraphics();
+    gs.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+    boolean useColoredHeatmap = Lizzie.config.kataGoEstimateMode.contains("color");
+    boolean blend = Lizzie.config.kataGoEstimateBlend;
+
     for (int i = 0; i < estimateArray.size(); i++) {
 
       double estimate = estimateArray.get(i);
@@ -1854,32 +1860,49 @@ public class BoardRenderer {
       int y = c[0];
       int stoneX = scaledMarginWidth + squareWidth * x;
       int stoneY = scaledMarginHeight + squareHeight * y;
-      // g.setColor(Color.BLACK);
 
-      boolean blend = Lizzie.config.kataGoEstimateBlend;
       int grey;
       double alpha = 255;
-      if (blend) {
+      if (blend && !useColoredHeatmap) {
         grey = (estimate > 0) ? 0 : 255;
         alpha *= Math.abs(estimate);
-      } else {
+      } else if (!useColoredHeatmap) {
         grey = roundToInt((1 - estimate) * 255 / 2.0);
+      } else {
+        grey = 128; // unused in color mode
+        alpha = Math.abs(estimate) * 200; // max alpha 200 for colored overlay
       }
 
       // Large rectangles (will go behind stones).
-
       if (drawLarge) {
-        Color cl = new Color(grey, grey, grey, roundToInt(blend ? 0.75 * alpha : alpha));
+        Color cl;
+        if (useColoredHeatmap) {
+          // Colored heatmap: blue for black territory, red for white territory
+          int a = roundToInt(Math.min(alpha, 200));
+          if (estimate >= 0) {
+            // Black territory: blue gradient
+            int intensity = roundToInt(Math.min(estimate * 255, 200));
+            cl = new Color(0, 0, intensity, a);
+          } else {
+            // White territory: red gradient
+            int intensity = roundToInt(Math.min(-estimate * 255, 200));
+            cl = new Color(intensity, 0, 0, a);
+          }
+        } else {
+          cl = new Color(grey, grey, grey, roundToInt(blend ? 0.75 * alpha : alpha));
+        }
         gl.setColor(cl);
-        gl.fillRect(
+        int rectSize = squareWidth > squareHeight ? (int) squareWidth : (int) squareHeight;
+        gl.fillRoundRect(
             (int) (stoneX - squareWidth * 0.5),
             (int) (stoneY - squareHeight * 0.5),
             (int) squareWidth,
-            (int) squareHeight);
+            (int) squareHeight,
+            rectSize / 4,
+            rectSize / 4);
       }
 
       // Small rectangles (will go on top of stones; perhaps only "dead" stones).
-
       Stone stoneHere = Lizzie.board.getStones()[Board.getIndex(x, y)];
       boolean deadStone =
           (estimate >= 0 && stoneHere.isWhite()) || (estimate <= 0 && stoneHere.isBlack());
@@ -1893,9 +1916,22 @@ public class BoardRenderer {
         double lengthFactor = drawSize ? 2 * convertLength(estimate) : 1.2;
         int length = (int) (lengthFactor * stoneRadius);
         int ialpha = (blend && drawSize) ? 180 : roundToInt(alpha);
-        Color cl = new Color(grey, grey, grey, ialpha);
+        Color cl;
+        if (useColoredHeatmap) {
+          int a = roundToInt(Math.min(ialpha, 180));
+          if (estimate >= 0) {
+            int intensity = roundToInt(Math.min(estimate * 220, 180));
+            cl = new Color(0, 0, intensity, a);
+          } else {
+            int intensity = roundToInt(Math.min(-estimate * 220, 180));
+            cl = new Color(intensity, 0, 0, a);
+          }
+        } else {
+          cl = new Color(grey, grey, grey, ialpha);
+        }
         gs.setColor(cl);
-        gs.fillRect(stoneX - length / 2, stoneY - length / 2, length, length);
+        gs.fillRoundRect(
+            stoneX - length / 2, stoneY - length / 2, length, length, length / 3, length / 3);
       }
     }
     // Lizzie isn't very careful about threading and removeEstimateRect may have been
@@ -1906,6 +1942,8 @@ public class BoardRenderer {
     if (cachedEstimateSmallRectImage == oldSmallRectImage) {
       cachedEstimateSmallRectImage = newSmallRectImage;
     }
+    gl.dispose();
+    gs.dispose();
   }
 
   private double convertLength(double length) {

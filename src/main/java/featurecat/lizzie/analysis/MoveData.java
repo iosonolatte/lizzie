@@ -16,6 +16,8 @@ public class MoveData {
   public double scoreMean;
   public double scoreStdev;
   public double policy;
+  public double lcb;
+  public double utility;
 
   private MoveData() {}
 
@@ -32,7 +34,8 @@ public class MoveData {
    *
    * <p>katago
    *
-   * <p>info move Q5 visits 9 utility -0.145503 radius 0.0299435 winrate 0.430823 scoreMean -1.88438 scoreStdev 23.8437 prior 0.000681463 lcb 0.420129 utilityLcb -0.175447 order 15 pv Q5 D16 D4
+   * <p>info move Q5 visits 9 utility -0.145503 radius 0.0299435 winrate 0.430823 scoreMean -1.88438
+   * scoreStdev 23.8437 prior 0.000681463 lcb 0.420129 utilityLcb -0.175447 order 15 pv Q5 D16 D4
    *
    * @param line line of ponder output
    */
@@ -66,7 +69,10 @@ public class MoveData {
           // LCB support
           result.winrate = Double.parseDouble(value) * 100;
         }
-
+        if (!islcb && key.equals("lcb")) {
+          // Always capture LCB for display even if not using it as primary winrate
+          result.lcb = Double.parseDouble(value) * 100;
+        }
         if (key.equals("winrate")) {
           // support 0.16 0.15
           result.winrate = Double.parseDouble(value) * 100;
@@ -79,6 +85,9 @@ public class MoveData {
         }
         if (key.equals("prior")) {
           result.policy = Double.parseDouble(value) * 100;
+        }
+        if (key.equals("utility")) {
+          result.utility = Double.parseDouble(value);
         }
       }
     }

@@ -275,6 +275,50 @@ public class WinratePane extends LizziePane {
         g.drawLine(x, barPosY, x, barPosY + barHeight);
       }
       g.setStroke(oldstroke);
+
+      // Draw score distribution bar below winrate bars
+      if (Lizzie.config.showScoreDistribution
+          && Lizzie.leelaz != null
+          && Lizzie.leelaz.isKataGo
+          && !Double.isNaN(Lizzie.leelaz.scoreStdev)
+          && Lizzie.leelaz.scoreStdev > 0) {
+        int distBarY = posY + posY + height - posY / 2;
+        int distBarHeight = height / 6;
+        double score = Lizzie.leelaz.scoreMean;
+        double stdev = Lizzie.leelaz.scoreStdev;
+
+        // Scale: map [-30, +30] points to bar width
+        int scoreCenter = (int) (barPosxB + maxBarwidth * (score + 30) / 60);
+        scoreCenter = Math.max(barPosxB + 2, Math.min(barPosxB + maxBarwidth - 2, scoreCenter));
+
+        // Draw the ±1σ range as a filled bar
+        int leftSigma = (int) (barPosxB + maxBarwidth * (score - stdev + 30) / 60);
+        int rightSigma = (int) (barPosxB + maxBarwidth * (score + stdev + 30) / 60);
+        leftSigma = Math.max(barPosxB + 2, leftSigma);
+        rightSigma = Math.min(barPosxB + maxBarwidth - 2, rightSigma);
+
+        g.setColor(new Color(100, 180, 255, 120));
+        g.fillRect(leftSigma, distBarY, rightSigma - leftSigma, distBarHeight);
+
+        // Draw the ±2σ range as a lighter bar
+        int left2Sigma = (int) (barPosxB + maxBarwidth * (score - 2 * stdev + 30) / 60);
+        int right2Sigma = (int) (barPosxB + maxBarwidth * (score + 2 * stdev + 30) / 60);
+        left2Sigma = Math.max(barPosxB + 2, left2Sigma);
+        right2Sigma = Math.min(barPosxB + maxBarwidth - 2, right2Sigma);
+
+        g.setColor(new Color(100, 180, 255, 50));
+        g.fillRect(left2Sigma, distBarY, right2Sigma - left2Sigma, distBarHeight);
+
+        // Draw the mean as a vertical line
+        g.setColor(Color.WHITE);
+        g.drawLine(scoreCenter, distBarY - 1, scoreCenter, distBarY + distBarHeight + 1);
+
+        // Label with score value
+        g.setColor(Color.WHITE);
+        setPanelFont(g, (int) (min(width, height) * 0.12));
+        String scoreLabel = String.format("S=%.1f±%.1f", score, stdev);
+        g.drawString(scoreLabel, barPosxB + 2, distBarY + distBarHeight + 12);
+      }
     }
   }
 

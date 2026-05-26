@@ -641,7 +641,7 @@ public class LizzieMain extends MainFrame {
     }
   }
 
-  public void drawEstimateRectKata(ArrayList<Double> estimateArray) {
+  public void drawEstimateRectKata(List<Double> estimateArray) {
     if (!Lizzie.config.showKataGoEstimate) {
       return;
     }

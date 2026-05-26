@@ -52,8 +52,8 @@ public class Leelaz {
   public boolean gtpConsole;
 
   public Board board;
-  private List<MoveData> bestMoves;
-  private List<MoveData> bestMovesTemp;
+  private volatile List<MoveData> bestMoves;
+  private volatile List<MoveData> bestMovesTemp;
 
   private List<LeelazListener> listeners;
 
@@ -93,7 +93,7 @@ public class Leelaz {
   private float dynamicOppKomi = Float.NaN;
   public boolean isKataGo = false;
   public boolean supportScoremean = false;
-  ArrayList<Double> estimateArray = new ArrayList<Double>();
+  volatile List<Double> estimateArray = new CopyOnWriteArrayList<Double>();
   public double scoreMean = 0;
   public double scoreStdev = 0;
   public static int engineIndex = 0;
@@ -105,8 +105,8 @@ public class Leelaz {
    */
   public Leelaz(String engineCommand) throws JSONException {
     board = new Board();
-    bestMoves = new ArrayList<>();
-    bestMovesTemp = new ArrayList<>();
+    bestMoves = new CopyOnWriteArrayList<>();
+    bestMovesTemp = new CopyOnWriteArrayList<>();
     listeners = new CopyOnWriteArrayList<>();
 
     isPondering = false;
@@ -622,7 +622,7 @@ public class Leelaz {
       }
 
       sendCommand("play " + colorString + " " + move);
-      bestMoves = new ArrayList<>();
+      bestMoves = new CopyOnWriteArrayList<>();
 
       if (isPondering && !Lizzie.frame.isPlayingAgainstLeelaz) ponder();
     }
@@ -665,7 +665,7 @@ public class Leelaz {
     synchronized (this) {
       supportScoremean = false;
       sendCommand("clear_board");
-      bestMoves = new ArrayList<>();
+      bestMoves = new CopyOnWriteArrayList<>();
       if (isPondering) ponder();
     }
   }
@@ -683,7 +683,7 @@ public class Leelaz {
   public void komi(double komi) {
     synchronized (this) {
       sendCommand("komi " + (komi == 0.0 ? "0" : komi));
-      bestMoves = new ArrayList<>();
+      bestMoves = new CopyOnWriteArrayList<>();
       Lizzie.board.getData().tryToClearBestMoves();
       if (isPondering) ponder();
     }
@@ -699,7 +699,7 @@ public class Leelaz {
     }
     synchronized (this) {
       sendCommand("undo");
-      bestMoves = new ArrayList<>();
+      bestMoves = new CopyOnWriteArrayList<>();
       if (isPondering) ponder();
     }
   }
@@ -710,7 +710,7 @@ public class Leelaz {
   }
 
   public void analyzeAvoid(String parameters) {
-    bestMoves = new ArrayList<>();
+    bestMoves = new CopyOnWriteArrayList<>();
     if (!isPondering) {
       isPondering = true;
       startPonderTime = System.currentTimeMillis();
@@ -736,14 +736,30 @@ public class Leelaz {
               + Lizzie.board.avoidCoords
               + " "
               + Lizzie.config.config.getJSONObject("leelaz").getInt("avoid-keep-variations"));
-    else
+    else if (this.isKataGo) {
+      StringBuilder cmd = new StringBuilder();
+      cmd.append("kata-analyze ")
+          .append(
+              Lizzie.config
+                  .config
+                  .getJSONObject("leelaz")
+                  .getInt("analyze-update-interval-centisec"));
+      // Request ownership data for heatmap
+      if (Lizzie.config.showKataGoEstimate) {
+        cmd.append(" ownership true");
+      }
+      // Request score distribution for richer display
+      cmd.append(" scoreDistribution true");
+      // Request analysis PV lines (up to 15 moves per variation)
+      cmd.append(" analysisPV 15");
+      sendCommand(cmd.toString());
+    } else
       sendCommand(
-          (this.isKataGo ? "kata-analyze " : "lz-analyze ")
+          "lz-analyze "
               + Lizzie.config
                   .config
                   .getJSONObject("leelaz")
-                  .getInt("analyze-update-interval-centisec")
-              + (this.isKataGo && Lizzie.config.showKataGoEstimate ? " ownership true" : ""));
+                  .getInt("analyze-update-interval-centisec"));
     // until it responds to this, incoming
     // ponder results are obsolete
   }

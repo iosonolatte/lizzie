@@ -117,7 +117,7 @@ public abstract class MainFrame extends JFrame {
 
   public abstract void removeEstimateRect();
 
-  public abstract void drawEstimateRectKata(ArrayList<Double> estimateArray);
+  public abstract void drawEstimateRectKata(List<Double> estimateArray);
 
   public abstract void drawControls();
 

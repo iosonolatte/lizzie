@@ -589,7 +589,7 @@ public class BoardPane extends LizziePane {
     boardRenderer.removeEstimateRect();
   }
 
-  public void drawEstimateRect(ArrayList<Double> estimateArray, boolean isZen) {
+  public void drawEstimateRect(List<Double> estimateArray, boolean isZen) {
     boardRenderer.drawEstimateRect(estimateArray, isZen);
   }
 
