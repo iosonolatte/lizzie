@@ -2,11 +2,20 @@ package featurecat.lizzie.analysis;
 
 import static org.junit.Assert.assertEquals;
 
+import featurecat.lizzie.Config;
+import featurecat.lizzie.Lizzie;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class MoveDataTest {
+
+  @BeforeClass
+  public static void setUpClass() throws IOException {
+    Lizzie.config = new Config();
+  }
   @Test
   public void testFromInfoLine() {
     String info = "move R5 visits 38 winrate 5404 order 0 pv R5 Q5 R6 S4 Q10 C3 D3 C4 C6 C5 D5";

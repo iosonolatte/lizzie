@@ -72,7 +72,9 @@ public class Board implements LeelazListener {
     analysisMode = false;
     playoutsAnalysis = 100;
     saveNode = Optional.empty();
-    Lizzie.frame.setForceRefresh(false);
+    if (Lizzie.frame != null) {
+      Lizzie.frame.setForceRefresh(false);
+    }
     history = new BoardHistoryList(BoardData.empty(boardWidth, boardHeight));
   }
 
