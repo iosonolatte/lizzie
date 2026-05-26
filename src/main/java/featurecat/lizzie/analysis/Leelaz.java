@@ -532,7 +532,7 @@ public class Leelaz {
       }
       cmdQueue.addLast(command);
       trySendCommandFromQueue();
-      if (Lizzie.frame.isAutoEstimating) {
+      if (Lizzie.frame != null && Lizzie.frame.isAutoEstimating) {
         if (command.startsWith("play") || command.startsWith("undo")) {
           Lizzie.frame.zen.sendCommand(command);
           Lizzie.frame.zen.countStones();
@@ -571,7 +571,9 @@ public class Leelaz {
     if (printCommunication) {
       System.out.printf("> %d %s\n", cmdNumber, command);
     }
-    Lizzie.gtpConsole.addCommand(command, cmdNumber);
+    if (Lizzie.gtpConsole != null) {
+      Lizzie.gtpConsole.addCommand(command, cmdNumber);
+    }
     command = cmdNumber + " " + command;
     cmdNumber++;
     sendToWriterThread(command + "\n");

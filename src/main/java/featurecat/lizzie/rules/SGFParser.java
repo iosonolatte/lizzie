@@ -123,9 +123,13 @@ public class SGFParser {
 
     // Detach engine for avoiding useless "play" and "undo" (#752)
     // except for handicap stones in parseValue() (#765).
-    Lizzie.leelaz.isAttached = false;
+    if (Lizzie.leelaz != null) {
+      Lizzie.leelaz.isAttached = false;
+    }
     parseValue(value, null, false);
-    Lizzie.leelaz.isAttached = true;
+    if (Lizzie.leelaz != null) {
+      Lizzie.leelaz.isAttached = true;
+    }
 
     return true;
   }
@@ -503,7 +507,9 @@ public class SGFParser {
     if (isBranch) {
       history.toBranchTop();
     } else {
-      Lizzie.frame.setPlayers(whitePlayer, blackPlayer);
+      if (Lizzie.frame != null) {
+        Lizzie.frame.setPlayers(whitePlayer, blackPlayer);
+      }
       if (history == null) {
         if (!Utils.isBlank(gameProperties.get("RE"))
             && Utils.isBlank(Lizzie.board.getHistory().getData().comment)) {
@@ -516,7 +522,9 @@ public class SGFParser {
         // Set AW/AB Comment
         if (!headComment.isEmpty()) {
           Lizzie.board.comment(headComment);
-          Lizzie.frame.refresh();
+          if (Lizzie.frame != null) {
+            Lizzie.frame.refresh();
+          }
         }
         if (gameProperties.size() > 0) {
           Lizzie.board.addNodeProperties(gameProperties);
