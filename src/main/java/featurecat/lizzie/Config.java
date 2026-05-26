@@ -247,6 +247,8 @@ public class Config {
     showKataGoEstimateOnMainboard = uiConfig.optBoolean("show-katago-estimate-onmainboard", true);
     kataGoEstimateMode = uiConfig.optString("katago-estimate-mode", "small+dead");
     kataGoEstimateBlend = uiConfig.optBoolean("katago-estimate-blend", true);
+    showScoreDistribution = uiConfig.optBoolean("show-score-distribution", true);
+    showUtility = uiConfig.optBoolean("show-utility", false);
     showWinrateInSuggestion = uiConfig.optBoolean("show-winrate-in-suggestion", true);
     showPlayoutsInSuggestion = uiConfig.optBoolean("show-playouts-in-suggestion", true);
     showScoremeanInSuggestion = uiConfig.optBoolean("show-scoremean-in-suggestion", true);
@@ -558,6 +560,8 @@ public class Config {
     ui.put("show-katago-estimate-onmainboard", true);
     ui.put("katago-estimate-mode", "small");
     ui.put("katago-estimate-blend", true);
+    ui.put("show-score-distribution", true);
+    ui.put("show-utility", false);
     config.put("ui", ui);
     return config;
   }
