@@ -59,9 +59,11 @@ jobs:
       - name: Clone KataGo source
         run: bash scripts/clone-katago.sh ${{ github.event.inputs.katago_version || 'v1.15.0' }}
 
-      - name: Install Eigen3 (system)
+      - name: Fetch Eigen
         run: |
-          sudo apt-get install -y -qq libeigen3-dev
+          if [ ! -d eigen ]; then
+            git clone --depth 1 --branch 3.4.0 https://gitlab.com/libeigen/eigen.git eigen
+          fi
 
       - name: Build KataGo for ${{ matrix.abi }}
         run: |
@@ -70,7 +72,6 @@ jobs:
           mkdir -p "$BUILD_DIR"
           cd "$BUILD_DIR"
 
-          # Eigen is installed system-wide at /usr/include/eigen3
           cmake -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
@@ -80,6 +81,7 @@ jobs:
             -DUSE_OPENCL=OFF \
             -DUSE_TENSORRT=OFF \
             -DUSE_BACKEND=EIGEN \
+            -DEigen3_DIR="$GITHUB_WORKSPACE/lizzie-mobile/katago-mobile/eigen" \
             -DUSE_GLOG=OFF \
             -DUSE_AVX2=OFF \
             -DUSE_AVX512=OFF \
