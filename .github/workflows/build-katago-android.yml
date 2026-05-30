@@ -57,12 +57,19 @@ jobs:
       - name: Build KataGo for Android
         run: bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
-      - name: Debug paths
+      - name: Archive everything
         run: |
-          echo "PWD=$(pwd)"
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          echo "--- full tree under working dir ---"
-          find . -type f -name "katago*" 2>/dev/null || true
+          echo "=== Listing all files ==="
+          find . -type f | head -50
+          echo "=== Creating archive ==="
+          tar czf $GITHUB_WORKSPACE/katago-output.tar.gz .
+          ls -lh $GITHUB_WORKSPACE/katago-output.tar.gz
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: katago-build-output
+          path: katago-output.tar.gz
 
       - name: Upload config
         uses: actions/upload-artifact@v4
