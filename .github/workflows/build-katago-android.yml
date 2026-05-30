@@ -57,30 +57,16 @@ jobs:
       - name: Build KataGo for Android
         run: bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
-      - name: Upload build log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-android-log
-          path: lizzie-mobile/build-android.log
-
-      - name: Locate binary
+      - name: Find output files
         run: |
-          echo "=== Looking for built katago binary ==="
-          ls -la out/android/arm64-v8a/katago 2>&1 || echo "Not at expected path"
-          echo "=== Searching for katago anywhere ==="
-          find . -name katago -type f 2>&1 || echo "Search done"
-          echo "=== Copy to workspace ==="
-          mkdir -p $GITHUB_WORKSPACE/katago-binary
-          cp out/android/arm64-v8a/katago $GITHUB_WORKSPACE/katago-binary/ 2>&1 || echo "cp failed, trying find..."
-          find . -name katago -type f -exec cp {} $GITHUB_WORKSPACE/katago-binary/ \; 2>&1 || true
-          ls -la $GITHUB_WORKSPACE/katago-binary/ 2>&1 || true
+          echo "=== Output files ==="
+          find out -type f 2>/dev/null || true
 
-      - name: Upload binary
+      - name: Upload output
         uses: actions/upload-artifact@v4
         with:
           name: katago-android-arm64-v8a
-          path: katago-binary/katago
+          path: lizzie-mobile/katago-mobile/out/**/*
           compression-level: 0
 
       - name: Upload config
