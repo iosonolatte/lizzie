@@ -37,11 +37,10 @@ jobs:
       - name: Install system deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake ninja-build wget unzip
+          sudo apt-get install -y -qq cmake ninja-build wget unzip libeigen3-dev
 
       - name: Setup Android SDK + NDK
         run: |
-          # Download cmdline-tools
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd /tmp
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
@@ -53,49 +52,29 @@ jobs:
 
       - name: Install NDK and platform
         run: |
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-26" "ndk;27.0.12077973" "build-tools;35.0.0" 2>&1 | tail -5
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME \
+            "platforms;android-26" "ndk;27.0.12077973" "build-tools;35.0.0" 2>&1 | tail -5
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
 
       - name: Clone KataGo source
         run: bash scripts/clone-katago.sh ${{ github.event.inputs.katago_version || 'v1.15.0' }}
 
-      - name: Install Eigen3 (system)
+      - name: Build KataGo for Android
         run: |
-          sudo apt-get install -y -qq libeigen3-dev
+          bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
-      - name: Build KataGo for ${{ matrix.abi }}
-        run: |
-          ABI="${{ matrix.abi }}"
-          BUILD_DIR="out/android/build/$ABI"
-          mkdir -p "$BUILD_DIR"
-          cd "$BUILD_DIR"
-
-          # Eigen is installed system-wide at /usr/include/eigen3
-          cmake -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
-            -DANDROID_ABI="$ABI" \
-            -DANDROID_PLATFORM=android-26 \
-            -DUSE_CUDA=OFF \
-            -DUSE_OPENCL=OFF \
-            -DUSE_TENSORRT=OFF \
-            -DUSE_BACKEND=EIGEN \
-            -DUSE_GLOG=OFF \
-            -DUSE_AVX2=OFF \
-            -DUSE_AVX512=OFF \
-            -DUSE_NEON=ON \
-            "$GITHUB_WORKSPACE/lizzie-mobile/katago-mobile/src"
-
-          ninja katago
-
-          mkdir -p "$GITHUB_WORKSPACE/lizzie-mobile/katago-mobile/out/android/$ABI"
-          cp katago "$GITHUB_WORKSPACE/lizzie-mobile/katago-mobile/out/android/$ABI/"
+      - name: Upload build log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-android-log
+          path: lizzie-mobile/build-android.log
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: katago-android-${{ matrix.abi }}
-          path: lizzie-mobile/katago-mobile/out/android/${{ matrix.abi }}/katago
+          name: katago-android-arm64-v8a
+          path: lizzie-mobile/katago-mobile/out/android/arm64-v8a/katago
           compression-level: 0
 
       - name: Upload config artifact
@@ -128,16 +107,3 @@ jobs:
         with:
           name: katago-mobile-model
           path: lizzie-mobile/katago-mobile/models/
-
-      - name: Prepare APK assets
-        run: |
-          mkdir -p composeApp/src/main/assets/katago/configs
-          mkdir -p composeApp/src/main/assets/katago/models
-          cp configs/android-gtp.cfg composeApp/src/main/assets/katago/configs/gtp.cfg
-          mkdir -p composeApp/src/main/assets/katago/arm64-v8a
-
-      - name: Upload APK assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: katago-apk-assets
-          path: lizzie-mobile/composeApp/src/main/assets/katago/
