@@ -57,17 +57,12 @@ jobs:
       - name: Build KataGo for Android
         run: bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
-      - name: Find output files
+      - name: Debug paths
         run: |
-          echo "=== Output files ==="
-          find out -type f 2>/dev/null || true
-
-      - name: Upload output
-        uses: actions/upload-artifact@v4
-        with:
-          name: katago-android-arm64-v8a
-          path: lizzie-mobile/katago-mobile/out/**/*
-          compression-level: 0
+          echo "PWD=$(pwd)"
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "--- full tree under working dir ---"
+          find . -type f -name "katago*" 2>/dev/null || true
 
       - name: Upload config
         uses: actions/upload-artifact@v4
