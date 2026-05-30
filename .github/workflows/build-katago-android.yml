@@ -8,15 +8,12 @@ on:
         required: true
         default: 'v1.15.0'
       model_name:
-        description: 'Network model name (e.g., kata1-b18c384nbt-s9996604416-d4316597426)'
+        description: 'Network model name'
         required: true
         default: 'kata1-b18c384nbt-s9996604416-d4316597426'
-  push:
-    paths:
-      - 'katago-mobile/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-android:
@@ -31,32 +28,33 @@ jobs:
         abi: [arm64-v8a]
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (mobile-port-kmp branch)
         uses: actions/checkout@v4
         with:
+          ref: mobile-port-kmp
           fetch-depth: 1
 
-      - name: Setup Java (for sdkmanager)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK + NDK
-        uses: nttld/setup-android@v1
-        with:
-          # Cache SDK packages
-          cache-enabled: true
-
-      - name: Install Android NDK
-        run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "ndk;27.0.12077973" --sdk_root=$ANDROID_HOME
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
-
-      - name: Install dependencies
+      - name: Install system deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake ninja-build
+          sudo apt-get install -y -qq cmake ninja-build wget unzip
+
+      - name: Setup Android SDK + NDK
+        run: |
+          # Download cmdline-tools
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd /tmp
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mv cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Install NDK and platform
+        run: |
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-26" "ndk;27.0.12077973" "build-tools;35.0.0" 2>&1 | tail -5
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
 
       - name: Clone KataGo source
         run: bash scripts/clone-katago.sh ${{ github.event.inputs.katago_version || 'v1.15.0' }}
@@ -92,7 +90,6 @@ jobs:
 
           ninja katago
 
-          # Copy binary to output
           mkdir -p "$GITHUB_WORKSPACE/lizzie-mobile/katago-mobile/out/android/$ABI"
           cp katago "$GITHUB_WORKSPACE/lizzie-mobile/katago-mobile/out/android/$ABI/"
 
@@ -117,9 +114,10 @@ jobs:
         working-directory: lizzie-mobile/katago-mobile
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (mobile-port-kmp branch)
         uses: actions/checkout@v4
         with:
+          ref: mobile-port-kmp
           fetch-depth: 1
 
       - name: Download model
@@ -133,13 +131,11 @@ jobs:
           name: katago-mobile-model
           path: lizzie-mobile/katago-mobile/models/
 
-      - name: Prepare assets for APK
+      - name: Prepare APK assets
         run: |
           mkdir -p composeApp/src/main/assets/katago/configs
           mkdir -p composeApp/src/main/assets/katago/models
-          # Config
           cp configs/android-gtp.cfg composeApp/src/main/assets/katago/configs/gtp.cfg
-          # Binary will be placed here after build
           mkdir -p composeApp/src/main/assets/katago/arm64-v8a
 
       - name: Upload APK assets
