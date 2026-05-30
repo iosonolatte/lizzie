@@ -23,18 +23,13 @@ jobs:
       run:
         working-directory: lizzie-mobile/katago-mobile
 
-    strategy:
-      matrix:
-        abi: [arm64-v8a]
-
     steps:
-      - name: Checkout repo (mobile-port-kmp branch)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: mobile-port-kmp
           fetch-depth: 1
 
-      - name: Install system deps
+      - name: Install deps
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq cmake ninja-build wget unzip libeigen3-dev
@@ -47,37 +42,37 @@ jobs:
           unzip -q commandlinetools-linux-11076708_latest.zip
           mv cmdline-tools $HOME/android-sdk/cmdline-tools/latest
           echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
           echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-      - name: Install NDK and platform
+      - name: Install NDK
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME \
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root=$ANDROID_HOME \
             "platforms;android-26" "ndk;27.0.12077973" "build-tools;35.0.0" 2>&1 | tail -5
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
 
-      - name: Clone KataGo source
+      - name: Clone KataGo
         run: bash scripts/clone-katago.sh ${{ github.event.inputs.katago_version || 'v1.15.0' }}
 
       - name: Build KataGo for Android
         run: |
           bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
-      - name: Upload build log (on failure)
+      - name: Upload build log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-android-log
           path: lizzie-mobile/build-android.log
 
-      - name: Upload binary artifact
+      - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: katago-android-arm64-v8a
           path: lizzie-mobile/katago-mobile/out/android/arm64-v8a/katago
           compression-level: 0
 
-      - name: Upload config artifact
+      - name: Upload config
         uses: actions/upload-artifact@v4
         with:
           name: katago-android-config
@@ -91,8 +86,7 @@ jobs:
         working-directory: lizzie-mobile/katago-mobile
 
     steps:
-      - name: Checkout repo (mobile-port-kmp branch)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: mobile-port-kmp
           fetch-depth: 1
@@ -102,7 +96,7 @@ jobs:
           MODEL_NAME="${{ github.event.inputs.model_name || 'kata1-b18c384nbt-s9996604416-d4316597426' }}"
           bash scripts/download-model.sh "$MODEL_NAME"
 
-      - name: Upload model artifact
+      - name: Upload model
         uses: actions/upload-artifact@v4
         with:
           name: katago-mobile-model
