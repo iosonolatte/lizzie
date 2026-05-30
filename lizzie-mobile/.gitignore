@@ -25,3 +25,7 @@ iosApp/build/
 *.jar
 *.aar
 *.apk
+
+# Large model binaries (download via scripts/download-model.sh)
+katago-mobile/models/*.bin.gz
+katago-mobile/out/
