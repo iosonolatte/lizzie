@@ -29,7 +29,6 @@ class AndroidLocalEngine(
     private var _isPondering = false
     private var isKataGo = false
     private val cmdQueue = ArrayDeque<String>()
-    private var binaryPath: String? = null
 
     override suspend fun start(config: EngineConfig) {
         val cfg = config as EngineConfig.Local
@@ -37,20 +36,26 @@ class AndroidLocalEngine(
 
         try {
             // Extract binary from assets
-            val extractedPath = extractBinary(cfg)
-            binaryPath = extractedPath
+            val extractor = KatagoAssetExtractor(context)
+            val files = extractor.extract()
 
-            // Build command
+            // Build command: katago gtp -model <model> -config <config>
             val cmd = buildList {
-                add(extractedPath)
+                add(files.binaryPath)
                 add("gtp")
-                if (cfg.weightsPath.isNotEmpty()) {
+                if (files.modelPath != null) {
+                    add("-model")
+                    add(files.modelPath)
+                } else if (cfg.weightsPath.isNotEmpty()) {
                     add("-model")
                     add(cfg.weightsPath)
                 }
-                cfg.configPath?.let {
+                if (files.configPath != null) {
                     add("-config")
-                    add(it)
+                    add(files.configPath)
+                } else {
+                    add("-config")
+                    add(cfg.configPath ?: "")
                 }
             }
 
@@ -202,9 +207,5 @@ class AndroidLocalEngine(
         }
     }
 
-    private fun extractBinary(cfg: EngineConfig.Local): String {
-        // Extract kataGo binary from assets to internal storage
-        // For now return a placeholder
-        return cfg.engineCommand
-    }
+    
 }

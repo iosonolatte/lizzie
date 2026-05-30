@@ -28,13 +28,12 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.client.core)
         }
         androidMain.dependencies {
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.kotlinx.coroutines.core)
         }
         iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
+            implementation(libs.kotlinx.coroutines.core)
         }
     }
 }

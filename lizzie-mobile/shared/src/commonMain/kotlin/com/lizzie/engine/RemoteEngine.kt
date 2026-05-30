@@ -2,24 +2,16 @@ package com.lizzie.engine
 
 import com.lizzie.analysis.MoveData
 import com.lizzie.rules.Stone
-import io.ktor.client.*
-import io.ktor.client.engine.*
-import io.ktor.client.plugins.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 /**
  * Remote engine connecting to a KataGo instance over TCP.
  *
- * KataGo supports GTP over TCP when started with `--gtp` flag.
- * Falls back to raw socket connection if Ktor TCP is unavailable (uses byteChannel).
+ * Uses platform-specific [GtpSocket] for the actual connection.
+ * KataGo should be started with `--gtp` flag for GTP-over-TCP mode.
  */
-class RemoteEngine(
-    private val clientEngine: HttpClientEngine? = null,
-) : Engine {
+class RemoteEngine : Engine {
 
     private val _status = MutableStateFlow<EngineStatus>(EngineStatus.Disconnected)
     override val status: Flow<EngineStatus> = _status.asStateFlow()
@@ -27,76 +19,29 @@ class RemoteEngine(
     private val _analysis = MutableStateFlow(AnalysisResult(emptyList()))
     override val analysis: Flow<AnalysisResult> = _analysis.asStateFlow()
 
-    private var client: HttpClient? = null
-    private var socket: ByteReadChannel? = null
-    private var writeChannel: ByteWriteChannel? = null
-    private var job: Job? = null
+    private var socket: GtpSocket? = null
+    private var readerJob: Job? = null
     private var cmdNumber = 1
     private var currentCmdNum = 0
     private var _isPondering = false
     private var isKataGo = false
-    private val cmdQueue = ArrayDeque<String>()
-    private var config: EngineConfig.Remote? = null
+
+    // Response tracking: maps cmdNumber -> CompletableDeferred<String>
+    private val pendingResponses = mutableMapOf<Int, CompletableDeferred<String>>()
+    private val pendingLock = Any()
 
     override suspend fun start(config: EngineConfig) {
         val cfg = config as EngineConfig.Remote
-        this.config = cfg
         _status.value = EngineStatus.Connecting("Connecting to ${cfg.host}:${cfg.port}")
         cmdNumber = 1
         currentCmdNum = 0
 
         try {
-            // Use raw TCP socket via Ktor
-            client = HttpClient(clientEngine) {
-                install(HttpTimeout) {
-                    connectTimeoutMillis = 5000
-                    socketTimeoutMillis = 30_000
-                }
-            }
+            val s = GtpSocket()
+            s.connect(cfg.host, cfg.port)
+            socket = s
 
-            // TCP connection — we use raw socket
-            val socket = java.net.Socket(cfg.host, cfg.port)
-            socket.soTimeout = 30_000
-            val input = socket.getInputStream()
-            val output = socket.getOutputStream()
-
-            val inputChannel = object : ByteReadChannel {
-                private val buffer = java.io.ByteArrayOutputStream()
-                override val availableForRead: Int get() = buffer.size()
-                override val isClosedForRead: Boolean get() = socket.isClosed
-                override suspend fun readByte(): Byte {
-                    val b = input.read()
-                    if (b == -1) throw java.io.EOFException("Socket closed")
-                    return b.toByte()
-                }
-                override suspend fun readAvailable(dst: kotlinx.io.Buffer, limit: Int): Long {
-                    // Simplified — read bytes into dst
-                    val bytes = ByteArray(limit)
-                    val count = input.read(bytes, 0, limit)
-                    if (count > 0) {
-                        dst.write(bytes, 0, count)
-                    }
-                    return count.toLong()
-                }
-                // ... other methods
-            }
-
-            this.socket = inputChannel
-            this.writeChannel = object : ByteWriteChannel {
-                override val isClosedForWrite: Boolean get() = socket.isClosed
-                override suspend fun writeByte(byte: Byte) {
-                    output.write(byte.toInt())
-                }
-                override suspend fun writeFully(src: ByteArray, offset: Int, length: Int) {
-                    output.write(src, offset, length)
-                    output.flush()
-                }
-                override fun close() {
-                    socket.close()
-                }
-            }
-
-            // GTP handshake — check name
+            // GTP handshake
             val nameResponse = sendGtpCommand("name")
             isKataGo = nameResponse.startsWith("KataGo")
 
@@ -109,25 +54,17 @@ class RemoteEngine(
                 isKataGo = isKataGo,
             )
 
-            // Start reader coroutine
-            job = CoroutineScope(Dispatchers.Default).launch {
+            // Start continuous reader coroutine
+            readerJob = CoroutineScope(Dispatchers.Default).launch {
                 try {
-                    val lineBuf = StringBuilder()
-                    while (isActive) {
-                        val b = input.read()
-                        if (b == -1) break
-                        val c = b.toChar()
-                        lineBuf.append(c)
-                        if (c == '\n') {
-                            val line = lineBuf.toString()
-                            lineBuf.clear()
-                            parseLine(line.trim())
-                        }
+                    while (isActive && socket?.isConnected == true) {
+                        val line = socket?.readLine() ?: break
+                        parseLine(line.trimEnd('\r'))
                     }
-                } catch (e: java.io.IOException) {
-                    _status.value = EngineStatus.Error("Connection lost: ${e.message}")
                 } catch (e: CancellationException) {
                     // Normal shutdown
+                } catch (e: Exception) {
+                    _status.value = EngineStatus.Error("Connection lost: ${e.message}")
                 }
             }
         } catch (e: Exception) {
@@ -137,13 +74,10 @@ class RemoteEngine(
     }
 
     override suspend fun stop() {
-        try {
-            sendGtpCommand("quit")
-        } catch (_: Exception) {}
-        job?.cancel()
-        socket?.let { /* close */ }
-        writeChannel?.close()
-        client?.close()
+        readerJob?.cancel()
+        try { sendGtpCommand("quit") } catch (_: Exception) {}
+        socket?.close()
+        socket = null
         _status.value = EngineStatus.Disconnected
         _isPondering = false
     }
@@ -180,57 +114,94 @@ class RemoteEngine(
     override suspend fun stopPonder() {
         if (!_isPondering) return
         _isPondering = false
-        // Send a dummy command to interrupt analysis
-        sendGtpCommand("play b pass")
+        // Send a command to interrupt the continuous analysis
+        // GTP doesn't have an interrupt, but sending a play command works
+        // because kata-analyze is replaced by the next command
+        sendGtpCommand("kata-analyze 1 0") // minimal analysis to replace the previous one
     }
 
     override fun isPondering(): Boolean = _isPondering
 
     override suspend fun sendGtpCommand(command: String): String {
+        val s = socket ?: throw IllegalStateException("Engine not connected")
         val cmdNum = cmdNumber++
-        val cmdLine = "$cmdNum $command"
-        writeChannel?.let { channel ->
-            channel.writeFully("$cmdLine\n".encodeToByteArray(), 0, cmdLine.length + 1)
-        } ?: throw IllegalStateException("Engine not connected")
+        val deferred = CompletableDeferred<String>()
 
-        // Wait for response
-        return withTimeout(30_000) {
-            // The response will come through parseLine
-            // For now, return empty — real implementation needs response queue
-            ""
+        synchronized(pendingLock) {
+            pendingResponses[cmdNum] = deferred
+        }
+
+        // Send command with GTP line numbering
+        s.send("$cmdNum $command\n".encodeToByteArray())
+
+        // Wait for response with timeout
+        return withTimeout(30_000L) {
+            deferred.await()
         }
     }
 
     private fun parseLine(line: String) {
         if (line.startsWith("info")) {
-            if (isKataGo) {
-                val bestMoves = parseInfoKatago(line.substring(5))
-                _analysis.value = AnalysisResult(
-                    bestMoves = bestMoves,
-                    scoreMean = bestMoves.firstOrNull()?.scoreMean ?: 0.0,
-                    scoreStdev = bestMoves.firstOrNull()?.scoreStdev ?: 0.0,
-                    currentPlayouts = MoveData.getPlayouts(bestMoves),
-                )
-
-                // Parse ownership if present
-                val ownership = parseOwnership(line)
-                if (ownership != null) {
-                    _analysis.value = _analysis.value.copy(ownership = ownership)
-                }
+            val rest = line.substring(4).trimStart()
+            val bestMoves = if (isKataGo) {
+                parseInfoKatago(rest)
             } else {
-                val bestMoves = parseInfo(line.substring(5))
-                _analysis.value = AnalysisResult(
-                    bestMoves = bestMoves,
-                    currentPlayouts = MoveData.getPlayouts(bestMoves),
-                )
+                parseInfo(rest)
+            }
+
+            // Update analysis
+            _analysis.value = AnalysisResult(
+                bestMoves = bestMoves,
+                scoreMean = bestMoves.firstOrNull()?.scoreMean ?: 0.0,
+                scoreStdev = bestMoves.firstOrNull()?.scoreStdev ?: 0.0,
+                currentPlayouts = MoveData.getPlayouts(bestMoves),
+            )
+
+            // Parse ownership if present
+            val ownership = parseOwnership(line)
+            if (ownership != null) {
+                _analysis.value = _analysis.value.copy(ownership = ownership)
             }
         } else if (line.startsWith("=")) {
-            val parts = line.trim().split(" ")
-            if (parts.size >= 2) {
-                currentCmdNum = parts[0].removePrefix("=").toIntOrNull() ?: currentCmdNum
+            // GTP success response: "=NNNN response_text"
+            val rest = line.substring(1).trimStart()
+            val spaceIdx = rest.indexOf(' ')
+            val responseText: String
+            val responseCmdNum: Int
+
+            if (spaceIdx > 0) {
+                val numStr = rest.substring(0, spaceIdx)
+                responseCmdNum = numStr.toIntOrNull() ?: return
+                responseText = rest.substring(spaceIdx + 1)
+            } else {
+                // Response without number
+                responseCmdNum = rest.toIntOrNull() ?: return
+                responseText = ""
             }
-            // Process next command in queue
-            processCmdQueue()
+
+            currentCmdNum = responseCmdNum
+            completePending(responseCmdNum, responseText)
+        } else if (line.startsWith("?")) {
+            // GTP error response
+            val rest = line.substring(1).trimStart()
+            val spaceIdx = rest.indexOf(' ')
+            if (spaceIdx > 0) {
+                val numStr = rest.substring(0, spaceIdx)
+                val responseCmdNum = numStr.toIntOrNull()
+                if (responseCmdNum != null) {
+                    completePending(responseCmdNum, "? ${rest.substring(spaceIdx + 1)}")
+                }
+            }
+        }
+        // Other lines (stderr, tuning output, etc.) are ignored
+    }
+
+    private fun completePending(cmdNum: Int, response: String) {
+        synchronized(pendingLock) {
+            val deferred = pendingResponses.remove(cmdNum)
+            if (deferred != null && !deferred.isCompleted) {
+                deferred.complete(response)
+            }
         }
     }
 
@@ -254,23 +225,4 @@ class RemoteEngine(
         if (params.size < 2) return null
         return params[1].trim().split(" ").mapNotNull { it.toDoubleOrNull() }
     }
-
-    private fun processCmdQueue() {
-        // In a full implementation, this would complete the sendCommand future
-    }
-}
-
-/** No-op engine used when no engine is configured. */
-class NullEngine : Engine {
-    override val status: Flow<EngineStatus> = flow { emit(EngineStatus.Disconnected) }
-    override val analysis: Flow<AnalysisResult> = flow { emit(AnalysisResult(emptyList())) }
-    override suspend fun start(config: EngineConfig) {}
-    override suspend fun stop() {}
-    override suspend fun initGame(boardSize: Int, komi: Double, handicap: Int) {}
-    override suspend fun playMove(color: Stone, coordinate: String?) {}
-    override suspend fun undoMove() {}
-    override suspend fun startPonder() {}
-    override suspend fun stopPonder() {}
-    override fun isPondering(): Boolean = false
-    override suspend fun sendGtpCommand(command: String): String = ""
 }
