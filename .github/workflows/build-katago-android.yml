@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       katago_version:
-        description: 'KataGo version tag (e.g., v1.15.0)'
+        description: 'KataGo version tag'
         required: true
         default: 'v1.15.0'
       model_name:
@@ -55,8 +55,7 @@ jobs:
         run: bash scripts/clone-katago.sh ${{ github.event.inputs.katago_version || 'v1.15.0' }}
 
       - name: Build KataGo for Android
-        run: |
-          bash scripts/build-android.sh 2>&1 | tee ../build-android.log
+        run: bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
       - name: Upload build log
         if: failure()
@@ -65,11 +64,19 @@ jobs:
           name: build-android-log
           path: lizzie-mobile/build-android.log
 
-      - name: Upload binary
+      - name: Locate and upload binary
+        run: |
+          echo "Looking for built katago binary..."
+          ls -la out/android/arm64-v8a/katago 2>&1
+          find . -name katago -type f 2>&1
+          cp out/android/arm64-v8a/katago $GITHUB_WORKSPACE/katago-binary/ 2>&1 || true
+          ls -la $GITHUB_WORKSPACE/katago-binary/ 2>&1
+
+      - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: katago-android-arm64-v8a
-          path: lizzie-mobile/katago-mobile/out/android/arm64-v8a/katago
+          path: katago-binary/katago
           compression-level: 0
 
       - name: Upload config
