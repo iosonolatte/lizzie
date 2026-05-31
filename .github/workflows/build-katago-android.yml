@@ -57,27 +57,19 @@ jobs:
       - name: Build KataGo for Android
         run: bash scripts/build-android.sh 2>&1 | tee ../build-android.log
 
-      - name: Archive everything
+      - name: Copy binary to assets
         run: |
-          echo "=== All files ==="
-          find . -type f | head -50
-          echo "=== Binary files ==="
-          find . -type f -exec file {} \; 2>/dev/null | grep -i "ELF\|executable\|binary\|katago" | head -10 || echo "No binaries found"
-          echo "=== Create archive ==="
-          tar czf $GITHUB_WORKSPACE/katago-output.tar.gz .
-          ls -lh $GITHUB_WORKSPACE/katago-output.tar.gz
+          mkdir -p $GITHUB_WORKSPACE/assets/katago/arm64-v8a
+          mkdir -p $GITHUB_WORKSPACE/assets/katago/configs
+          cp out/android/arm64-v8a/katago $GITHUB_WORKSPACE/assets/katago/arm64-v8a/ 2>/dev/null || \
+            cp out/android/build/arm64-v8a/katago $GITHUB_WORKSPACE/assets/katago/arm64-v8a/ 2>/dev/null || true
+          cp configs/android-gtp.cfg $GITHUB_WORKSPACE/assets/katago/configs/gtp.cfg 2>/dev/null || true
 
-      - name: Upload archive
+      - name: Upload assets
         uses: actions/upload-artifact@v4
         with:
-          name: katago-build-output
-          path: katago-output.tar.gz
-
-      - name: Upload config
-        uses: actions/upload-artifact@v4
-        with:
-          name: katago-android-config
-          path: lizzie-mobile/katago-mobile/configs/android-gtp.cfg
+          name: katago-android-assets
+          path: assets/
 
   download-model:
     name: Download model
@@ -102,3 +94,59 @@ jobs:
         with:
           name: katago-mobile-model
           path: lizzie-mobile/katago-mobile/models/
+
+  assemble-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    needs: [build-android, download-model]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mobile-port-kmp
+          fetch-depth: 1
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Download kataGo binary + config assets
+        uses: actions/download-artifact@v4
+        with:
+          name: katago-android-assets
+          path: katago-assets
+
+      - name: Download model
+        uses: actions/download-artifact@v4
+        with:
+          name: katago-mobile-model
+          path: katago-model
+
+      - name: Stage assets into app
+        run: |
+          mkdir -p lizzie-mobile/composeApp/src/main/assets/katago/arm64-v8a
+          mkdir -p lizzie-mobile/composeApp/src/main/assets/katago/configs
+          mkdir -p lizzie-mobile/composeApp/src/main/assets/katago/models
+          cp katago-assets/katago/arm64-v8a/katago lizzie-mobile/composeApp/src/main/assets/katago/arm64-v8a/ 2>/dev/null || true
+          cp katago-assets/katago/configs/gtp.cfg lizzie-mobile/composeApp/src/main/assets/katago/configs/ 2>/dev/null || true
+          cp katago-model/kata1-*-*.bin.gz lizzie-mobile/composeApp/src/main/assets/katago/models/ 2>/dev/null || true
+          echo "=== Staged assets ==="
+          find lizzie-mobile/composeApp/src/main/assets -type f
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Build Android APK
+        run: |
+          cd lizzie-mobile
+          chmod +x gradlew 2>/dev/null || gradle wrapper
+          ./gradlew :composeApp:assembleDebug --no-daemon 2>&1
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lizzie-mobile-apk
+          path: lizzie-mobile/composeApp/build/outputs/apk/debug/composeApp-debug.apk
