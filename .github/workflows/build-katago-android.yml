@@ -59,9 +59,11 @@ jobs:
 
       - name: Archive everything
         run: |
-          echo "=== Listing all files ==="
+          echo "=== All files ==="
           find . -type f | head -50
-          echo "=== Creating archive ==="
+          echo "=== Binary files ==="
+          find . -type f -exec file {} \; 2>/dev/null | grep -i "ELF\|executable\|binary\|katago" | head -10 || echo "No binaries found"
+          echo "=== Create archive ==="
           tar czf $GITHUB_WORKSPACE/katago-output.tar.gz .
           ls -lh $GITHUB_WORKSPACE/katago-output.tar.gz
 
