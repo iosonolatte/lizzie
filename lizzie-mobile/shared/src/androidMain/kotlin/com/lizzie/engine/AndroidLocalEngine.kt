@@ -1,8 +1,10 @@
 package com.lizzie.engine
 
 import android.content.Context
+import android.util.Log
 import com.lizzie.analysis.MoveData
 import com.lizzie.rules.Stone
+import java.io.File
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -15,6 +17,10 @@ import kotlinx.coroutines.flow.*
 class AndroidLocalEngine(
     private val context: Context,
 ) : Engine {
+
+    companion object {
+        private const val TAG = "LizzieEngine"
+    }
 
     private val _status = MutableStateFlow<EngineStatus>(EngineStatus.Disconnected)
     override val status: Flow<EngineStatus> = _status.asStateFlow()
@@ -39,29 +45,41 @@ class AndroidLocalEngine(
             val extractor = KatagoAssetExtractor(context)
             val files = extractor.extract()
 
-            // Build command: katago gtp -model <model> -config <config>
-            val cmd = buildList {
-                add(files.binaryPath)
-                add("gtp")
-                if (files.modelPath != null) {
-                    add("-model")
-                    add(files.modelPath)
-                } else if (cfg.weightsPath.isNotEmpty()) {
-                    add("-model")
-                    add(cfg.weightsPath)
-                }
-                if (files.configPath != null) {
-                    add("-config")
-                    add(files.configPath)
-                } else {
-                    add("-config")
-                    add(cfg.configPath ?: "")
-                }
-            }
+            // On Android 10+, /data/data/ is mounted noexec.
+                        // Use the app's native library directory (which IS executable).
+                        // The KataGo binary is bundled in jniLibs/arm64-v8a/ as libkatago.so
+                        val nativeLibDir = context.applicationInfo.nativeLibraryDir
+                        val binaryPath = "$nativeLibDir/libkatago.so"
+                        Log.i(TAG, "Using binary at: $binaryPath")
+
+                        val cmd = buildList {
+                            add(binaryPath)
+                            add("gtp")
+                            if (files.modelPath != null) {
+                                add("-model")
+                                add(files.modelPath)
+                            } else if (cfg.weightsPath.isNotEmpty()) {
+                                add("-model")
+                                add(cfg.weightsPath)
+                            }
+                            if (files.configPath != null) {
+                                add("-config")
+                                add(files.configPath)
+                            } else {
+                                add("-config")
+                                add(cfg.configPath ?: "")
+                            }
+                        }
 
             val pb = ProcessBuilder(cmd)
-            pb.redirectErrorStream(true)
-            process = pb.start()
+                        pb.redirectErrorStream(true)
+                        pb.directory(File(files.workingDir))
+
+                        // Log the command for debugging
+                        Log.i(TAG, "Starting: ${cmd.joinToString(" ")}")
+                        Log.i(TAG, "Working dir: ${files.workingDir}")
+
+                        process = pb.start()
 
             val input = process!!.inputStream
             val output = process!!.outputStream
@@ -94,8 +112,9 @@ class AndroidLocalEngine(
                 }
             }
         } catch (e: Exception) {
-            _status.value = EngineStatus.Error("Failed to start engine: ${e.message}")
-        }
+                    Log.e(TAG, "Failed to start engine", e)
+                    _status.value = EngineStatus.Error("Failed to start engine: ${e.message}")
+                }
     }
 
     override suspend fun stop() {

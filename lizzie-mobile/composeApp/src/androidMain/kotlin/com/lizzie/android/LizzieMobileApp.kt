@@ -2,6 +2,7 @@ package com.lizzie.android
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,6 +43,9 @@ fun LizzieMobileApp() {
                     .fillMaxSize()
                     .padding(padding)
             ) {
+                // Engine status indicator
+                EngineStatusBar(engineStatus)
+
                 // Board takes the most space
                 BoardView(
                     boardData = gameState.boardData,
@@ -75,6 +79,26 @@ fun LizzieMobileApp() {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun EngineStatusBar(status: EngineStatus) {
+    val (text, color) = when (status) {
+        is EngineStatus.Disconnected -> "Engine: Disconnected" to MaterialTheme.colorScheme.error
+        is EngineStatus.Connecting -> "Engine: Connecting (${status.info})" to MaterialTheme.colorScheme.tertiary
+        is EngineStatus.Ready -> "Engine: ${status.engineName} v${status.version}" to MaterialTheme.colorScheme.primary
+        is EngineStatus.Error -> "Engine Error: ${status.message}" to MaterialTheme.colorScheme.error
+    }
+    Surface(
+        color = color.copy(alpha = 0.15f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+        )
     }
 }
 

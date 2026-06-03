@@ -61,11 +61,12 @@ android {
     // Built using: cd katago-mobile && bash scripts/build-android.sh
     // Expected output: katago-mobile/out/android/arm64-v8a/katago
     sourceSets {
-        getByName("main") {
-            assets.srcDirs(
-                "src/androidMain/assets",
-                "../katago-mobile/out/android",
-            )
+            getByName("main") {
+                assets.srcDirs(
+                    "src/androidMain/assets",
+                    "../katago-mobile/out/android",
+                )
+                jniLibs.srcDirs("src/main/jniLibs")
+            }
         }
-    }
 }
