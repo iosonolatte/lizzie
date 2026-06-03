@@ -47,7 +47,7 @@ class Zobrist {
         private val zobristTable: Array<LongArray> = Array(MAX_SIZE * MAX_SIZE) { LongArray(3) }
 
         init {
-            val random = kotlin.random.Random(0x9E3779B97F4A7C15)
+            val random = kotlin.random.Random(-5405985711114227691L)
             for (i in zobristTable.indices) {
                 for (j in 0 until 3) {
                     zobristTable[i][j] = random.nextLong()

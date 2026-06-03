@@ -6,7 +6,7 @@ package com.lizzie.engine
  * Android: Uses java.net.Socket
  * iOS: Uses NSInputStream/NSOutputStream
  */
-expect class GtpSocket {
+expect class GtpSocket() {
     /** Connect to host:port. Throws on failure. */
     suspend fun connect(host: String, port: Int, timeoutMs: Int = 5000)
 

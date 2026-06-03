@@ -33,8 +33,8 @@ actual class GtpSocket {
 
     actual suspend fun readLine(): String? = withContext(Dispatchers.IO) {
         while (true) {
-            val b = input?.read() ?: return@withContext null
-            if (b == -1) return@withContext null
+            val b = input?.read()
+            if (b == null || b == -1) return@withContext null
             val c = b.toChar()
             if (c == '\n') {
                 val line = readBuffer.toString()

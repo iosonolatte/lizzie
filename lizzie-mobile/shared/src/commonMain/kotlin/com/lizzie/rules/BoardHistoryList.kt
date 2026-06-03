@@ -258,7 +258,7 @@ class BoardHistoryList(data: BoardData?) {
         var node: BoardHistoryNode? = head
         while (node?.previous() != null) {
             node = node.previous()
-            if (data.zobrist == node.data.zobrist && data.blackToPlay == node.data.blackToPlay) {
+            if (node?.data?.zobrist == data.zobrist && node?.data?.blackToPlay == data.blackToPlay) {
                 return true
             }
         }
@@ -355,8 +355,8 @@ class BoardHistoryList(data: BoardData?) {
     }
 
     /** Get the full move sequence as a flat list of coordinates (excluding passes). */
-    fun getMoveList(): List<MoveData> {
-        val moves = mutableListOf<MoveData>()
+    fun getMoveList(): List<Pair<Int, Int>> {
+        val moves = mutableListOf<Pair<Int, Int>>()
         val start = root()
         var node = start
         while (node != null) {
