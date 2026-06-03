@@ -13,5 +13,8 @@ leelaz
 src/main/resources/META-INF
 target
 leelaz_opencl_tuning
+!lizzie-mobile/gradlew
+!lizzie-mobile/gradlew.bat
 *.sh
+!lizzie-mobile/gradle/wrapper/gradle-wrapper.jar
 *.jar
