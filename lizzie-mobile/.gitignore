@@ -36,3 +36,4 @@ katago-mobile/out/
 # KataGo binaries and models (downloaded by scripts)
 composeApp/src/androidMain/assets/katago/
 local.properties
+katago-mobile/eigen/
