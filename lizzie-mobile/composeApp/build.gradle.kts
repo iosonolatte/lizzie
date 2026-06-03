@@ -16,7 +16,7 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
-            implementation(projects.shared)
+            implementation(project(":shared"))
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.kotlinx.coroutines.core)
