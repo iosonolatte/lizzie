@@ -63,8 +63,11 @@ class KatagoAssetExtractor(private val context: Context) {
             }
         }
 
-        // Find model
-        val modelFile = findModelFile(modelsDir)
+        // Extract model files from assets
+                extractModels(modelsDir)
+
+                // Find model
+                val modelFile = findModelFile(modelsDir)
 
         return ExtractedFiles(
             binaryPath = binaryFile.absolutePath,
@@ -85,12 +88,33 @@ class KatagoAssetExtractor(private val context: Context) {
         }
     }
 
-    private fun findModelFile(modelsDir: File): File? {
-        val candidates = modelsDir.listFiles { f ->
-            f.name.endsWith(".bin.gz") || f.name.endsWith(".txt.gz")
+    private fun extractModels(modelsDir: File) {
+        try {
+            val list = context.assets.list("$ASSET_PREFIX/models") ?: return
+            for (name in list) {
+                val dest = File(modelsDir, name)
+                if (!dest.exists()) {
+                    try {
+                        extractAsset("$ASSET_PREFIX/models/$name", dest)
+                        Log.i(TAG, "Extracted model: ${dest.name}")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to extract model $name: ${e.message}")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No model files in assets")
         }
-        return candidates?.firstOrNull()
     }
+
+    private fun findModelFile(modelsDir: File): File? {
+            val candidates = modelsDir.listFiles { f ->
+                f.name.endsWith(".bin.gz") || f.name.endsWith(".txt.gz") ||
+                    f.name.endsWith(".bin") || f.name.endsWith(".model") ||
+                    f.name.endsWith(".weights")
+            }
+            return candidates?.firstOrNull()
+        }
 
     private fun extractAsset(assetPath: String, destFile: File) {
         destFile.parentFile?.mkdirs()
