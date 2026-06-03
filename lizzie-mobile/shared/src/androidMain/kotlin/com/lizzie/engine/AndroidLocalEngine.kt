@@ -46,11 +46,19 @@ class AndroidLocalEngine(
             val files = extractor.extract()
 
             // On Android 10+, /data/data/ is mounted noexec.
-                        // Use the app's native library directory (which IS executable).
-                        // The KataGo binary is bundled in jniLibs/arm64-v8a/ as libkatago.so
+                        // Try native library dir first (requires extractNativeLibs=true),
+                        // fall back to extracted assets path (works on older Android).
                         val nativeLibDir = context.applicationInfo.nativeLibraryDir
-                        val binaryPath = "$nativeLibDir/libkatago.so"
-                        Log.i(TAG, "Using binary at: $binaryPath")
+                        val nativeBinary = "$nativeLibDir/libkatago.so"
+                        val extractedBinary = files.binaryPath
+
+                        val binaryPath = if (File(nativeBinary).exists()) {
+                            Log.i(TAG, "Using native lib binary at: $nativeBinary")
+                            nativeBinary
+                        } else {
+                            Log.i(TAG, "Native lib not found, trying extracted asset at: $extractedBinary")
+                            extractedBinary
+                        }
 
                         val cmd = buildList {
                             add(binaryPath)
