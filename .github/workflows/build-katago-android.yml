@@ -48,7 +48,7 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
             --sdk_root=$ANDROID_HOME \
-            "platforms;android-26" "ndk;27.0.12077973" "build-tools;35.0.0" 2>&1 | tail -5
+            "platforms;android-26" "platforms;android-35" "ndk;27.0.12077973" "build-tools;35.0.0" 2>&1 | tail -5
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
 
       - name: Clone KataGo
