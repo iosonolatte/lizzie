@@ -28,4 +28,7 @@ iosApp/build/
 
 # Large model binaries (download via scripts/download-model.sh)
 katago-mobile/models/*.bin.gz
+katago-mobile/out/# KataGo source (cloned by clone-katago.sh)
+katago-mobile/src/
+katago-mobile/models/
 katago-mobile/out/
