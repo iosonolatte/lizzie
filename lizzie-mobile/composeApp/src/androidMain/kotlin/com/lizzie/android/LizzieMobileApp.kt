@@ -7,14 +7,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lizzie.android.ui.board.BoardView
 import com.lizzie.android.ui.analysis.BestMovesPanel
 import com.lizzie.android.ui.analysis.WinrateGraph
 import com.lizzie.android.viewmodel.GameViewModel
+import com.lizzie.engine.EngineStatus
 
 @Composable
 fun LizzieMobileApp() {
-    val viewModel = remember { GameViewModel() }
+    val viewModel = viewModel<GameViewModel>()
     val gameState by viewModel.gameState.collectAsState()
     val engineStatus by viewModel.engineStatus.collectAsState()
 

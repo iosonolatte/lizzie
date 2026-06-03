@@ -32,3 +32,7 @@ katago-mobile/out/# KataGo source (cloned by clone-katago.sh)
 katago-mobile/src/
 katago-mobile/models/
 katago-mobile/out/
+
+# KataGo binaries and models (downloaded by scripts)
+composeApp/src/androidMain/assets/katago/
+local.properties

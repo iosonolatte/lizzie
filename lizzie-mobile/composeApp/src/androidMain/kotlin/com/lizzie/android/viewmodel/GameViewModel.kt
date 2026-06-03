@@ -1,8 +1,12 @@
 package com.lizzie.android.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lizzie.analysis.MoveData
+import com.lizzie.engine.AndroidLocalEngine
+import com.lizzie.engine.EngineConfig
+import com.lizzie.engine.EngineStatus
 import com.lizzie.rules.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +22,7 @@ data class BoardState(
     val boardSize: Int = 19,
 )
 
-class GameViewModel : ViewModel() {
+class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _gameState = MutableStateFlow(
         BoardState(
@@ -29,19 +33,56 @@ class GameViewModel : ViewModel() {
     )
     val gameState: StateFlow<BoardState> = _gameState.asStateFlow()
 
-    private val _engineStatus = MutableStateFlow<com.lizzie.engine.EngineStatus>(
-        com.lizzie.engine.EngineStatus.Disconnected
-    )
-    val engineStatus: StateFlow<com.lizzie.engine.EngineStatus> = _engineStatus.asStateFlow()
+    private val _engineStatus = MutableStateFlow<EngineStatus>(EngineStatus.Disconnected)
+    val engineStatus: StateFlow<EngineStatus> = _engineStatus.asStateFlow()
 
     private val history = BoardHistoryList(BoardData.empty())
+    private val engine = AndroidLocalEngine(application)
+
+    init {
+        startEngine()
+        observeAnalysis()
+    }
+
+    private fun startEngine() {
+        viewModelScope.launch {
+            engine.status.collect { status ->
+                _engineStatus.value = status
+            }
+        }
+        viewModelScope.launch {
+            engine.start(
+                EngineConfig.Local(
+                    engineCommand = "",
+                    weightsPath = "",
+                )
+            )
+            engine.initGame(19, 6.5)
+            engine.startPonder()
+        }
+    }
+
+    private fun observeAnalysis() {
+        viewModelScope.launch {
+            engine.analysis.collect { result ->
+                val current = history.getData()
+                val updated = current.withBestMoves(result.bestMoves)
+                _gameState.value = _gameState.value.copy(
+                    boardData = updated,
+                    bestMoves = result.bestMoves,
+                )
+            }
+        }
+    }
 
     fun onIntersectionClick(x: Int, y: Int) {
         val currentData = history.getData()
         val color = if (currentData.blackToPlay) Stone.BLACK else Stone.WHITE
-
         val placed = history.place(x, y, color)
         if (placed) {
+            viewModelScope.launch {
+                engine.playMove(color, Board.convertCoordinatesToName(x, y))
+            }
             emitState()
         }
     }
@@ -49,11 +90,13 @@ class GameViewModel : ViewModel() {
     fun onPass() {
         val color = if (history.isBlacksTurn()) Stone.BLACK else Stone.WHITE
         history.pass(color)
+        viewModelScope.launch { engine.playMove(color, null) }
         emitState()
     }
 
     fun onUndo() {
         history.previous()
+        viewModelScope.launch { engine.undoMove() }
         emitState()
     }
 
@@ -81,24 +124,16 @@ class GameViewModel : ViewModel() {
         )
     }
 
-    fun onEngineStatusChanged(status: com.lizzie.engine.EngineStatus) {
-        _engineStatus.value = status
-    }
-
-    fun onAnalysisUpdated(bestMoves: List<MoveData>) {
-        val current = _gameState.value.boardData
-        val updated = current.withBestMoves(bestMoves)
-        _gameState.value = _gameState.value.copy(
-            boardData = updated,
-            bestMoves = bestMoves,
-        )
-    }
-
     private fun emitState() {
         _gameState.value = _gameState.value.copy(
             boardData = history.getData(),
             history = history,
             bestMoves = history.getData().bestMoves,
         )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.launch { engine.stop() }
     }
 }
