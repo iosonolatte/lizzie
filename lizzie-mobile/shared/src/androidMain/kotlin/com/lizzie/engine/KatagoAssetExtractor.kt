@@ -12,7 +12,7 @@ import java.io.FileOutputStream
  * Assets location:
  *   katago/arm64-v8a/katago        — native binary
  *   katago/configs/gtp.cfg         — KataGo config
- *   katago/models/*.bin.gz         — network weights
+ *   katago/models/ (model files, e.g. .bin.gz)         — network weights
  */
 class KatagoAssetExtractor(private val context: Context) {
 
