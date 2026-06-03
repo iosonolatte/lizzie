@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.lizzie.analysis.MoveData
 import com.lizzie.rules.Board
 import com.lizzie.rules.BoardData
@@ -44,12 +45,12 @@ fun BoardView(
             .pointerInput(boardData) {
                 detectTapGestures { offset ->
                     val size = this.size
-                    val marginFraction = if (showCoordinates) 0.07 else 0.04
-                    val sqSize = size.width / (boardWidth + marginFraction * 2)
+                    val marginFraction = if (showCoordinates) 0.07f else 0.04f
+                    val sqSize = size.width / (boardWidth + marginFraction * 2f)
                     val margin = sqSize * marginFraction
 
-                    val boardX = ((offset.x - margin) / sqSize + 0.5).toInt()
-                    val boardY = ((offset.y - margin) / sqSize + 0.5).toInt()
+                    val boardX = ((offset.x - margin) / sqSize + 0.5f).toInt()
+                    val boardY = ((offset.y - margin) / sqSize + 0.5f).toInt()
 
                     if (boardX in 0 until boardWidth && boardY in 0 until boardHeight) {
                         onIntersectionClick(boardX, boardY)
@@ -58,8 +59,8 @@ fun BoardView(
             }
     ) {
         val canvasSize = min(size.width, size.height)
-        val marginFraction = if (showCoordinates) 0.07 else 0.04
-        val squareSize = canvasSize / (boardWidth + marginFraction * 2)
+        val marginFraction = if (showCoordinates) 0.07f else 0.04f
+        val squareSize = canvasSize / (boardWidth + marginFraction * 2f)
         val margin = squareSize * marginFraction
 
         // ---- Board background ----
@@ -181,10 +182,7 @@ fun BoardView(
             val coordColor = Color(0xFF555555)
             val coordStyle = TextStyle(
                 color = coordColor,
-                fontSize = androidx.compose.ui.unit.TextUnit(
-                    squareSize * 0.35f,
-                    androidx.compose.ui.unit.TextUnitType.Sp
-                ),
+                fontSize = (squareSize * 0.35f).sp,
             )
 
             val alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
@@ -267,10 +265,7 @@ private fun DrawScope.drawBestMoveLabels(
         val winrateText = "%.1f%%".format(move.winrate * 100)
         val labelStyle = TextStyle(
             color = Color.White,
-            fontSize = androidx.compose.ui.unit.TextUnit(
-                squareSize * 0.28f,
-                androidx.compose.ui.unit.TextUnitType.Sp
-            ),
+            fontSize = (squareSize * 0.28f).sp,
         )
         // Draw text using drawContext.canvas
         // (Text rendering in Canvas requires textMeasurer)

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.lizzie.android.ui.board.BoardView
 import com.lizzie.android.ui.analysis.BestMovesPanel
 import com.lizzie.android.ui.analysis.WinrateGraph

@@ -50,8 +50,8 @@ fun WinrateGraph(
         dataPoints.forEachIndexed { i, winrate ->
             val x = i * stepX
             // winrate: 0-100, map to y (0 at bottom = 100%, height at top = 0%)
-            val y = graphHeight - ((winrate / 100f) * (graphHeight - 2 * padding)) - padding
-            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            val y = graphHeight - ((winrate / 100.0) * (graphHeight - 2.0 * padding)) - padding
+            if (i == 0) path.moveTo(x, y.toFloat()) else path.lineTo(x, y.toFloat())
         }
 
         drawPath(
