@@ -57,7 +57,7 @@ android {
     sourceSets {
         getByName("main") {
             assets.srcDirs(
-                "src/main/assets",
+                "src/androidMain/assets",
                 "../katago-mobile/out/android",
             )
         }

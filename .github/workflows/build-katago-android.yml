@@ -125,14 +125,14 @@ jobs:
 
       - name: Stage assets into app
         run: |
-          mkdir -p lizzie-mobile/composeApp/src/main/assets/katago/arm64-v8a
-          mkdir -p lizzie-mobile/composeApp/src/main/assets/katago/configs
-          mkdir -p lizzie-mobile/composeApp/src/main/assets/katago/models
-          cp katago-assets/katago/arm64-v8a/katago lizzie-mobile/composeApp/src/main/assets/katago/arm64-v8a/ 2>/dev/null || true
-          cp katago-assets/katago/configs/gtp.cfg lizzie-mobile/composeApp/src/main/assets/katago/configs/ 2>/dev/null || true
-          cp katago-model/kata1-*-*.bin.gz lizzie-mobile/composeApp/src/main/assets/katago/models/ 2>/dev/null || true
+          mkdir -p lizzie-mobile/composeApp/src/androidMain/assets/katago/arm64-v8a
+          mkdir -p lizzie-mobile/composeApp/src/androidMain/assets/katago/configs
+          mkdir -p lizzie-mobile/composeApp/src/androidMain/assets/katago/models
+          cp katago-assets/katago/arm64-v8a/katago lizzie-mobile/composeApp/src/androidMain/assets/katago/arm64-v8a/ 2>/dev/null || true
+          cp katago-assets/katago/configs/gtp.cfg lizzie-mobile/composeApp/src/androidMain/assets/katago/configs/ 2>/dev/null || true
+          cp katago-model/kata1-*-*.bin.gz lizzie-mobile/composeApp/src/androidMain/assets/katago/models/ 2>/dev/null || true
           echo "=== Staged assets ==="
-          find lizzie-mobile/composeApp/src/main/assets -type f
+          find lizzie-mobile/composeApp/src/androidMain/assets -type f
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
