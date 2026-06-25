@@ -15,3 +15,8 @@ target
 leelaz_opencl_tuning
 *.sh
 *.jar
+
+# Local artifacts and runtime data
+config.txt.backup
+engines/
+gtp_logs/

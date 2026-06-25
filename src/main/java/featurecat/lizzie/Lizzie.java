@@ -67,18 +67,22 @@ public class Lizzie {
       }
       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
     } catch (IllegalAccessException e) {
+      System.err.println("Failed to set Look & Feel: " + e.getMessage());
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
+      System.err.println("Look & Feel class not found: " + e.getMessage());
       e.printStackTrace();
     } catch (InstantiationException e) {
+      System.err.println("Failed to instantiate Look & Feel: " + e.getMessage());
       e.printStackTrace();
     } catch (UnsupportedLookAndFeelException e) {
+      System.err.println("Unsupported Look & Feel: " + e.getMessage());
       e.printStackTrace();
     }
   }
 
   public static void shutdown() {
-    if (config.config.getJSONObject("ui").getBoolean("confirm-exit")) {
+    if (config.config.getJSONObject("ui").optBoolean("confirm-exit", true)) {
       int ret =
           JOptionPane.showConfirmDialog(
               null, "Do you want to save this SGF?", "Save SGF?", JOptionPane.OK_CANCEL_OPTION);
