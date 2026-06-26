@@ -1,0 +1,14 @@
+# Build artifacts
+lizzie-server
+lizzie-server.exe
+lizzie-server-*
+!lizzie-server-*.md
+
+# Smoke-test scratch
+server_out.log
+server_err.log
+
+# Go test/coverage
+*.test
+*.out
+coverage.html
