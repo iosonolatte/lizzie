@@ -1,17 +1,60 @@
+# Lizzie (legacy Java) build / runtime
 persist.properties
 persist
 lizzie.properties
 config.txt
-out/*
-.idea/
-*.dll
-*.iml
-*.exe
 network
-*.gz
-leelaz
 src/main/resources/META-INF
 target
 leelaz_opencl_tuning
-*.sh
+leelaz
+*.dll
+*.exe
 *.jar
+
+# Build outputs (Gradle, CMake, Ninja, Dart, Flutter, Maven, generic)
+.gradle/
+.kotlin/
+**/build/
+**/out/
+captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+.idea/
+*.gz
+
+# Per-user / per-machine config (NEVER commit)
+local.properties
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.fvm/
+.flutter-version
+.flutter-plugins
+build/
+
+# iOS
+**/Pods/
+**/*.xcworkspace/xcuserdata/
+**/*.xcodeproj/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/DerivedData/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Vendored native deps (cloned by lizzie-mobile/katago-mobile/scripts/clone-katago.sh)
+# ~158 MB; CI builds fresh from upstream KataGo + Eigen
+lizzie-mobile/katago-mobile/eigen/
+lizzie-mobile/katago-mobile/src/
+lizzie-mobile/katago-mobile/models/
+lizzie-mobile/katago-mobile/out/
+
+# Windows reserved-name artifacts (cmd accidentally creates literal `nul` file)
+nul
+nul.*
