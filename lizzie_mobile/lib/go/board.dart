@@ -15,7 +15,7 @@ import 'zobrist.dart';
 class Board {
   int width;
   int height;
-  late final Zobrist _zobrist;
+  late Zobrist _zobrist;
 
   final BoardHistoryList history;
 
@@ -172,6 +172,30 @@ class Board {
       h,
       !hasLibs,
     );
+  }
+
+  /// Apply capture rules after placing a stone at (x, y) of [color].
+  ///
+  /// Removes all orthogonally adjacent opponent groups that have no liberties.
+  /// Returns the total number of stones removed.
+  ///
+  /// Exposed as a public static so the SGF parser can apply captures when
+  /// replaying a game without going through [place].
+  static int applyCaptures(
+    int x,
+    int y,
+    Stone color,
+    List<Stone> stones,
+    Zobrist zobrist,
+    int w,
+    int h,
+  ) {
+    int removed = 0;
+    removed += _removeDeadChain(x + 1, y, color.opposite, stones, zobrist, w, h);
+    removed += _removeDeadChain(x, y + 1, color.opposite, stones, zobrist, w, h);
+    removed += _removeDeadChain(x - 1, y, color.opposite, stones, zobrist, w, h);
+    removed += _removeDeadChain(x, y - 1, color.opposite, stones, zobrist, w, h);
+    return removed;
   }
 
   // ---------------------------------------------------------------------------

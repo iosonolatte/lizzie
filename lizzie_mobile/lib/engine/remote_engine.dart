@@ -70,7 +70,7 @@ class RemoteEngine implements Engine {
   }
 
   @override
-  Future<void> initGame(
+  Future<List<String>> initGame(
     int boardSize, {
     double komi = 6.5,
     int handicap = 0,
@@ -82,10 +82,9 @@ class RemoteEngine implements Engine {
     await _client!.send('komi $komi');
     if (handicap > 0) {
       final response = await _client!.send('fixed_handicap $handicap');
-      // Parse returned vertex list and place stones locally.
-      // Format: "=N D4 Q16 ..." or "=N D4 D16 ..."
-      _parseHandicapResponse(response);
+      return _parseHandicapResponse(response);
     }
+    return const [];
   }
 
   @override
@@ -206,10 +205,13 @@ class RemoteEngine implements Engine {
     );
   }
 
-  void _parseHandicapResponse(String response) {
-    // Format: " D4 Q16 ..." (space-separated GTP coordinates)
-    // The response comes back as GTP coordinates; we don't need to
-    // place them locally (the engine tracks them). This is just for
-    // local board sync if needed.
+  List<String> _parseHandicapResponse(String response) {
+    // The GtpClient strips the "=NNN " prefix, so `response` is the
+    // space-separated list of GTP vertex strings, e.g. "D4 Q16 D16".
+    return response
+        .trim()
+        .split(' ')
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 }

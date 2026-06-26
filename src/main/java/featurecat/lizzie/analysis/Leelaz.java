@@ -512,8 +512,11 @@ public class Leelaz {
       // Do no exit for switching weights
       // System.exit(-1);
     } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(-1);
+      // Show the error in the UI (opens error dialog + GTP console) instead of
+      // killing the JVM with System.exit, which would bypass shutdown hooks and
+      // suppress any higher-level error handling.
+      alertEngineDown("Unexpected I/O error reading from engine.\n" + e.getLocalizedMessage());
+      throw new RuntimeException("Engine read error", e);
     }
   }
 

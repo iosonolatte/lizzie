@@ -57,12 +57,13 @@ class MockEngine implements Engine {
   }
 
   @override
-  Future<void> initGame(
+  Future<List<String>> initGame(
     int boardSize, {
     double komi = 6.5,
     int handicap = 0,
   }) async {
-    // No-op for mock.
+    // No-op for mock — no stones to report.
+    return const [];
   }
 
   @override

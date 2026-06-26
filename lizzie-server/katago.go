@@ -44,8 +44,9 @@ type katago struct {
 	// active client connections.
 	onDisconnect func()
 
-	stopOnce sync.Once
-	done     chan struct{} // closed when subprocess exits
+	stopOnce       sync.Once
+	disconnectOnce sync.Once // ensures onDisconnect fires exactly once
+	done           chan struct{} // closed when subprocess exits
 }
 
 func newKatago(binary, config, model string, idleTimeout, shutdownTO time.Duration, onDisconnect func()) *katago {
@@ -198,9 +199,11 @@ func (k *katago) stop() {
 		<-done
 	}
 
-	if k.onDisconnect != nil {
-		k.onDisconnect()
-	}
+	k.disconnectOnce.Do(func() {
+		if k.onDisconnect != nil {
+			k.onDisconnect()
+		}
+	})
 }
 
 // IsRunning reports whether the subprocess is currently up.
@@ -277,7 +280,9 @@ func (k *katago) wait() {
 		log.Printf("katago: exited cleanly (code %d)", exitCode)
 	}
 	close(k.done)
-	if k.onDisconnect != nil {
-		k.onDisconnect()
-	}
+	k.disconnectOnce.Do(func() {
+		if k.onDisconnect != nil {
+			k.onDisconnect()
+		}
+	})
 }

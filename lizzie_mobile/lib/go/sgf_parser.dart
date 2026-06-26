@@ -1,3 +1,4 @@
+import 'board.dart';
 import 'board_data.dart';
 import 'board_history_list.dart';
 import 'board_history_node.dart';
@@ -23,8 +24,10 @@ class SgfParser {
     String sgf, {
     int defaultSize = 19,
   }) {
-    // Strip whitespace and normalize.
-    final cleaned = sgf.replaceAll(RegExp(r'\s+'), ' ').trim();
+    // Normalize whitespace OUTSIDE bracket values only.
+    // A simple replaceAll would corrupt multi-line comments and
+    // coordinates inside [...] property values.
+    final cleaned = _normalizeSgf(sgf);
 
     // Find the root node data block inside the outermost parentheses.
     final rootMatch = RegExp(r'\(([\s\S]*)\)').firstMatch(cleaned);
@@ -304,6 +307,25 @@ class SgfParser {
     stones[idx] = color;
     zobristClone.toggleStone(x, y, width, height, color);
 
+    // Apply capture rules: remove opponent groups that lost their last liberty.
+    final capturedStones = Board.applyCaptures(
+      x,
+      y,
+      color,
+      stones,
+      zobristClone,
+      width,
+      height,
+    );
+
+    int bc = history.data.blackCaptures;
+    int wc = history.data.whiteCaptures;
+    if (color.isBlack) {
+      bc += capturedStones;
+    } else {
+      wc += capturedStones;
+    }
+
     final newState = BoardData(
       width: width,
       height: height,
@@ -314,8 +336,8 @@ class SgfParser {
       zobrist: zobristClone.hash,
       moveNumber: moveNumber,
       moveNumberList: List<int>.filled(stones.length, 0),
-      blackCaptures: history.data.blackCaptures,
-      whiteCaptures: history.data.whiteCaptures,
+      blackCaptures: bc,
+      whiteCaptures: wc,
       winrate: 100.0 - history.data.winrate,
     );
     // Sync the zobrist back so the next move toggles from this state.
@@ -331,6 +353,60 @@ class SgfParser {
       if (s[i] == ')') count--;
     }
     return count;
+  }
+
+  /// Collapse runs of whitespace in SGF text, but only outside [...].
+  ///
+  /// SGF property values (enclosed in `[...]`) may legally contain newlines
+  /// and other whitespace that must be preserved (e.g. game comments).
+  /// Structural whitespace between tokens outside brackets is safe to fold.
+  static String _normalizeSgf(String sgf) {
+    final out = StringBuffer();
+    bool inBracket = false;
+    bool escape = false;
+    bool lastWasSpace = false;
+
+    for (int i = 0; i < sgf.length; i++) {
+      final ch = sgf[i];
+      if (escape) {
+        // Always emit escaped characters verbatim.
+        out.write(ch);
+        escape = false;
+        lastWasSpace = false;
+        continue;
+      }
+      if (ch == '\\') {
+        out.write(ch);
+        escape = true;
+        lastWasSpace = false;
+        continue;
+      }
+      if (ch == '[') {
+        inBracket = true;
+        out.write(ch);
+        lastWasSpace = false;
+        continue;
+      }
+      if (ch == ']') {
+        inBracket = false;
+        out.write(ch);
+        lastWasSpace = false;
+        continue;
+      }
+      if (!inBracket) {
+        // Outside brackets: collapse any run of whitespace to a single space.
+        if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
+          if (!lastWasSpace) {
+            out.write(' ');
+            lastWasSpace = true;
+          }
+          continue;
+        }
+      }
+      out.write(ch);
+      lastWasSpace = false;
+    }
+    return out.toString().trim();
   }
 
   /// Unescape SGF text (replace \\ with \, \] with ]).

@@ -35,7 +35,12 @@ abstract class Engine {
   Future<void> stop();
 
   /// Initialize a new game (board size, komi, handicap).
-  Future<void> initGame(int boardSize, {double komi = 6.5, int handicap = 0});
+  ///
+  /// Returns the list of GTP coordinate strings for any handicap stones placed
+  /// by the engine (e.g. `['D4', 'Q16', 'D16']`). Returns an empty list when
+  /// [handicap] is 0 or the engine places no stones.
+  /// The caller is responsible for applying these coordinates to the local board.
+  Future<List<String>> initGame(int boardSize, {double komi = 6.5, int handicap = 0});
 
   /// Play a move on the engine's internal board.
   Future<void> playMove(Stone color, String? coordinate);
