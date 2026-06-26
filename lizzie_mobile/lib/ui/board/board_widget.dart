@@ -4,6 +4,7 @@ import '../../engine/analysis.dart';
 import '../../go/board_data.dart';
 import '../../go/stone.dart';
 import '../../state/providers.dart';
+import 'board_layout.dart';
 import 'board_overlay_painter.dart';
 
 /// A Go board widget that renders grid lines, star points, stones,
@@ -34,21 +35,21 @@ class BoardWidget extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate cell size to fit within available space.
+        // Calculate layout once; the tap handler in _handleTap uses the
+        // exact same numbers (via BoardLayout) so the conversion is
+        // round-trip correct.
         final maxDim = constraints.maxWidth < constraints.maxHeight
             ? constraints.maxWidth
             : constraints.maxHeight;
-        // Leave padding for coordinates.
-        final padding = maxDim / (w + 2) * 0.5;
-        final cellSize = (maxDim - padding * 2) / (w - 1);
-
-        final boardSize = Size(cellSize * (w - 1), cellSize * (h - 1));
+        final layout = BoardLayout.compute(width: w, height: h, maxDim: maxDim);
+        final boardSize = layout.boardSize;
+        final cellSize = layout.cellSize;
 
         return Padding(
-          padding: EdgeInsets.all(padding + cellSize * 0.5),
+          padding: layout.outerPadding,
           child: GestureDetector(
             onTapUp: (details) {
-              _handleTap(details, context, data);
+              _handleTap(details, context, layout);
             },
             child: SizedBox(
               width: boardSize.width,
@@ -87,23 +88,22 @@ class BoardWidget extends ConsumerWidget {
     );
   }
 
-  void _handleTap(TapUpDetails details, BuildContext context, BoardData data) {
+  void _handleTap(
+    TapUpDetails details,
+    BuildContext context,
+    BoardLayout layout,
+  ) {
     if (onPointTap == null) return;
 
     final renderBox = context.findRenderObject() as RenderBox;
     final localPos = renderBox.globalToLocal(details.globalPosition);
 
-    // The CustomPaint is sized at cellSize * (w-1) x cellSize * (h-1).
-    // Padding around it is (padding + cellSize/2).
-    final dx = localPos.dx;
-    final dy = localPos.dy;
-
-    // Convert pixel coordinates to board coordinates.
-    final cellSize = (renderBox.size.width) / (data.width - 1);
-    final x = (dx / cellSize).round();
-    final y = (dy / cellSize).round();
-
-    if (x >= 0 && x < data.width && y >= 0 && y < data.height) {
+    // localPos is in the BoardWidget's render box (the LayoutBuilder)
+    // coordinate system. BoardLayout.toBoardX/toBoardY handles the
+    // padding + cellSize*0.5 offset and the board-size bounds check.
+    final x = layout.toBoardX(localPos.dx);
+    final y = layout.toBoardY(localPos.dy);
+    if (x != null && y != null) {
       onPointTap!(x, y);
     }
   }
