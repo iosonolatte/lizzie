@@ -1,0 +1,112 @@
+name: Build KataGo native binary for Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      katago_version:
+        description: 'KataGo version tag'
+        required: true
+        default: 'v1.15.0'
+      model_name:
+        description: 'Network model name'
+        required: true
+        default: 'kata1-b18c384nbt-s9996604416-d4316597426'
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build native katago (arm64-v8a, x86_64)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lizzie-mobile/katago-mobile
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build wget unzip
+
+      - name: Setup Android NDK
+        id: setup_ndk
+        uses: android-actions/setup-ndk@v1
+        with:
+          ndk-version: r27
+          add-to-path: false
+
+      - name: Clone KataGo
+        run: bash scripts/clone-katago.sh ${{ github.event.inputs.katago_version || 'v1.15.0' }}
+
+      - name: Build katago for Android
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup_ndk.outputs.ndk-path }}
+        run: bash scripts/build-android.sh 2>&1 | tee build-android.log
+
+      - name: Stage binaries
+        run: |
+          mkdir -p katago-binaries/arm64-v8a
+          mkdir -p katago-binaries/x86_64
+          cp out/android/build/arm64-v8a/katago katago-binaries/arm64-v8a/katago
+          cp out/android/build/x86_64/katago    katago-binaries/x86_64/katago
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: katago-android-binaries
+          path: lizzie-mobile/katago-mobile/katago-binaries/
+
+  download-model:
+    name: Download katago neural-net model
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lizzie-mobile/katago-mobile
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download model
+        run: bash scripts/download-model.sh "${{ github.event.inputs.model_name || 'kata1-b18c384nbt-s9996604416-d4316597426' }}"
+
+      - name: Upload model
+        uses: actions/upload-artifact@v4
+        with:
+          name: katago-model
+          path: lizzie-mobile/katago-mobile/models/
+
+  release:
+    name: Publish GitHub release
+    runs-on: ubuntu-latest
+    needs: [build-android, download-model]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: katago-android-binaries
+          path: katago-binaries
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: katago-model
+          path: katago-model
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: katago-${{ github.event.inputs.katago_version || 'v1.15.0' }}
+          generate_release_notes: true
+          files: |
+            katago-binaries/**
+            katago-model/**
