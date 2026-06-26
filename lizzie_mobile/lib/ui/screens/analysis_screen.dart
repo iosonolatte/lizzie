@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -134,11 +135,9 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
         fileName: 'game.sgf',
         type: FileType.custom,
         allowedExtensions: ['sgf'],
+        bytes: Uint8List.fromList(sgfContent.codeUnits),
       );
       if (result == null) return; // User cancelled.
-
-      final file = File(result);
-      await file.writeAsString(sgfContent);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
