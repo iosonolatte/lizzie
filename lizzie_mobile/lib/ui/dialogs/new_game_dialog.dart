@@ -99,10 +99,7 @@ class _NewGameDialogState extends ConsumerState<NewGameDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _onStart,
-          child: const Text('Start'),
-        ),
+        FilledButton(onPressed: _onStart, child: const Text('Start')),
       ],
     );
   }

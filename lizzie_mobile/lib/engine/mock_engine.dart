@@ -30,7 +30,17 @@ class MockEngine implements Engine {
     ['Q16', 'D4', 'D16', 'Q4', 'R3', 'C15', 'C3', 'R15', 'K10'],
   ];
 
-  static const _cannedWinrates = [43.0, 42.5, 41.0, 40.0, 38.0, 37.0, 36.0, 35.0, 34.0];
+  static const _cannedWinrates = [
+    43.0,
+    42.5,
+    41.0,
+    40.0,
+    38.0,
+    37.0,
+    36.0,
+    35.0,
+    34.0,
+  ];
   static const _cannedPlayouts = [500, 320, 280, 150, 90, 60, 40, 30, 20];
 
   @override
@@ -47,7 +57,11 @@ class MockEngine implements Engine {
   }
 
   @override
-  Future<void> initGame(int boardSize, {double komi = 6.5, int handicap = 0}) async {
+  Future<void> initGame(
+    int boardSize, {
+    double komi = 6.5,
+    int handicap = 0,
+  }) async {
     // No-op for mock.
   }
 
@@ -96,15 +110,21 @@ class MockEngine implements Engine {
         scoreStdev: 25.0,
         lcb: winrates[i] - 2.0,
         order: i,
-        variation: [moves[i], moves[(i + 1) % moves.length], moves[(i + 2) % moves.length]],
+        variation: [
+          moves[i],
+          moves[(i + 1) % moves.length],
+          moves[(i + 2) % moves.length],
+        ],
       );
     });
 
-    _analysisController.add(AnalysisResult(
-      bestMoves: moveData,
-      scoreMean: moveData.isNotEmpty ? moveData.first.scoreMean : 0.0,
-      scoreStdev: 25.0,
-      currentPlayouts: moveData.fold(0, (sum, m) => sum + m.playouts),
-    ));
+    _analysisController.add(
+      AnalysisResult(
+        bestMoves: moveData,
+        scoreMean: moveData.isNotEmpty ? moveData.first.scoreMean : 0.0,
+        scoreStdev: 25.0,
+        currentPlayouts: moveData.fold(0, (sum, m) => sum + m.playouts),
+      ),
+    );
   }
 }

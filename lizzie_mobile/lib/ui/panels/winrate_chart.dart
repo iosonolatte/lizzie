@@ -49,7 +49,10 @@ class WinrateChartPanel extends ConsumerWidget {
             show: true,
             drawVerticalLine: true,
             horizontalInterval: 25,
-            verticalInterval: (rangeX / 4).ceilToDouble().clamp(1, double.infinity),
+            verticalInterval: (rangeX / 4).ceilToDouble().clamp(
+              1,
+              double.infinity,
+            ),
             getDrawingHorizontalLine: (value) => FlLine(
               color: Colors.grey.withValues(alpha: 0.2),
               strokeWidth: 1,
@@ -105,10 +108,10 @@ class WinrateChartPanel extends ConsumerWidget {
                 show: spots.length < 30,
                 getDotPainter: (spot, percent, barData, index) =>
                     FlDotCirclePainter(
-                  radius: 3,
-                  color: Colors.blue,
-                  strokeWidth: 0,
-                ),
+                      radius: 3,
+                      color: Colors.blue,
+                      strokeWidth: 0,
+                    ),
               ),
               belowBarData: BarAreaData(
                 show: true,
@@ -119,8 +122,7 @@ class WinrateChartPanel extends ConsumerWidget {
           lineTouchData: LineTouchData(
             enabled: true,
             touchTooltipData: LineTouchTooltipData(
-              getTooltipItems: (touchedSpots) =>
-                  touchedSpots.map((spot) {
+              getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
                 return LineTooltipItem(
                   'Move ${spot.x.toInt()}\n${spot.y.toStringAsFixed(1)}%',
                   const TextStyle(

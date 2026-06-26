@@ -42,7 +42,11 @@ class BoardHistoryNode {
   /// returns that child (dedup). Otherwise appends a new child.
   /// If [changeMove] is true, replaces the first child while preserving
   /// its subtree (used by change-move functionality).
-  BoardHistoryNode addOrGoto(BoardData newData, bool newBranch, bool changeMove) {
+  BoardHistoryNode addOrGoto(
+    BoardData newData,
+    bool newBranch,
+    bool changeMove,
+  ) {
     if (!newBranch) {
       // Check for transposition (matching zobrist).
       for (final child in variations) {

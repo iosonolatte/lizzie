@@ -1,11 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Type of Go analysis engine.
-enum EngineType {
-  mock,
-  kataGo,
-  leelaZero,
-}
+enum EngineType { mock, kataGo, leelaZero }
 
 /// Holds all configuration data for connecting to an engine.
 class EngineConfigData {
@@ -19,11 +15,7 @@ class EngineConfigData {
     required this.port,
   });
 
-  EngineConfigData copyWith({
-    EngineType? type,
-    String? host,
-    int? port,
-  }) {
+  EngineConfigData copyWith({EngineType? type, String? host, int? port}) {
     return EngineConfigData(
       type: type ?? this.type,
       host: host ?? this.host,
@@ -45,7 +37,8 @@ class EngineConfigStore {
     final prefs = await SharedPreferences.getInstance();
     final typeIdx = prefs.getInt(_kType) ?? 0; // mock by default
     // Clamp to valid range
-    final type = EngineType.values[typeIdx.clamp(0, EngineType.values.length - 1)];
+    final type =
+        EngineType.values[typeIdx.clamp(0, EngineType.values.length - 1)];
     return EngineConfigData(
       type: type,
       host: prefs.getString(_kHost) ?? '127.0.0.1',

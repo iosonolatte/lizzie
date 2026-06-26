@@ -29,7 +29,11 @@ class EngineController extends Notifier<AsyncValue<EngineStatus>> {
   Future<void> start(EngineConfig config) async {
     final cfg = config.host == 'mock'
         ? const EngineConfigData(type: EngineType.mock, host: 'mock', port: 0)
-        : EngineConfigData(type: EngineType.kataGo, host: config.host, port: config.port);
+        : EngineConfigData(
+            type: EngineType.kataGo,
+            host: config.host,
+            port: config.port,
+          );
     await startWithType(cfg);
   }
 
@@ -72,7 +76,11 @@ class EngineController extends Notifier<AsyncValue<EngineStatus>> {
   }
 
   /// Initialize a new game on the engine.
-  Future<void> initGame(int boardSize, {double komi = 6.5, int handicap = 0}) async {
+  Future<void> initGame(
+    int boardSize, {
+    double komi = 6.5,
+    int handicap = 0,
+  }) async {
     await _engine?.initGame(boardSize, komi: komi, handicap: handicap);
   }
 

@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import '../lib/go/sgf_parser.dart';
-import '../lib/go/stone.dart';
+import 'package:lizzie_mobile/go/sgf_parser.dart';
+import 'package:lizzie_mobile/go/stone.dart';
 
 void main() {
   group('SgfParser', () {

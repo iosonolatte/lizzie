@@ -10,7 +10,8 @@ import 'board_history_node.dart';
 class BoardHistoryList {
   BoardHistoryNode head;
 
-  BoardHistoryList(BoardData rootData) : head = BoardHistoryNode(data: rootData);
+  BoardHistoryList(BoardData rootData)
+    : head = BoardHistoryNode(data: rootData);
 
   // ---------------------------------------------------------------------------
   // Current state
@@ -75,8 +76,7 @@ class BoardHistoryList {
   }
 
   /// Number of variations from the current node's parent.
-  int get variationCount =>
-      head.previous?.variations.length ?? 1;
+  int get variationCount => head.previous?.variations.length ?? 1;
 
   // ---------------------------------------------------------------------------
   // Tree mutation

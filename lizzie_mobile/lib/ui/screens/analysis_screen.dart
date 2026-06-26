@@ -121,10 +121,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   }
 
   void _openNewGameDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const NewGameDialog(),
-    );
+    showDialog(context: context, builder: (_) => const NewGameDialog());
   }
 
   Future<void> _saveSgf() async {
@@ -219,10 +216,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   }
 
   void _openMetadataDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const GameMetadataDialog(),
-    );
+    showDialog(context: context, builder: (_) => const GameMetadataDialog());
   }
 
   void _openSettings() {
@@ -347,7 +341,9 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   }
 
   Widget _buildStatusBar(
-      AsyncValue<EngineStatus> status, AnalysisResult? analysis) {
+    AsyncValue<EngineStatus> status,
+    AnalysisResult? analysis,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       color: Colors.grey[100],
@@ -395,13 +391,17 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
           const Spacer(),
           // Engine name.
           status.whenOrNull(
-            data: (s) => s is Ready
-                ? Text(
-                    s.engineName,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  )
-                : null,
-          ) ?? const SizedBox.shrink(),
+                data: (s) => s is Ready
+                    ? Text(
+                        s.engineName,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      )
+                    : null,
+              ) ??
+              const SizedBox.shrink(),
         ],
       ),
     );
@@ -458,8 +458,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
             blackScore > whiteScore
                 ? 'B+${(blackScore - whiteScore).toStringAsFixed(1)}'
                 : whiteScore > blackScore
-                    ? 'W+${(whiteScore - blackScore).toStringAsFixed(1)}'
-                    : 'Draw',
+                ? 'W+${(whiteScore - blackScore).toStringAsFixed(1)}'
+                : 'Draw',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,

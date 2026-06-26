@@ -21,8 +21,11 @@ class GtpClient {
 
   Future<void> connect(String host, int port, {int timeoutMs = 5000}) async {
     _disposed = false;
-    _socket = await Socket.connect(host, port,
-        timeout: Duration(milliseconds: timeoutMs));
+    _socket = await Socket.connect(
+      host,
+      port,
+      timeout: Duration(milliseconds: timeoutMs),
+    );
     _socket!.setOption(SocketOption.tcpNoDelay, true);
 
     // Buffer for partial lines.
@@ -72,7 +75,10 @@ class GtpClient {
   /// Send a GTP command and await the response.
   /// Returns the response body (after the `=N ` prefix).
   /// Throws on GTP error response (`?`).
-  Future<String> send(String command, {Duration timeout = const Duration(seconds: 30)}) async {
+  Future<String> send(
+    String command, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
     if (_socket == null || _disposed) {
       throw StateError('Not connected');
     }
@@ -95,7 +101,9 @@ class GtpClient {
       // Success: "=NNN response_body" or "=NNN"
       final rest = line.substring(1).trimLeft();
       final spaceIdx = rest.indexOf(' ');
-      final cmdNum = int.tryParse(spaceIdx > 0 ? rest.substring(0, spaceIdx) : rest);
+      final cmdNum = int.tryParse(
+        spaceIdx > 0 ? rest.substring(0, spaceIdx) : rest,
+      );
       final response = spaceIdx > 0 ? rest.substring(spaceIdx + 1) : '';
       if (cmdNum != null) {
         final completer = _pending.remove(cmdNum);
@@ -107,7 +115,9 @@ class GtpClient {
       // Error: "?NNN error_message"
       final rest = line.substring(1).trimLeft();
       final spaceIdx = rest.indexOf(' ');
-      final cmdNum = int.tryParse(spaceIdx > 0 ? rest.substring(0, spaceIdx) : rest);
+      final cmdNum = int.tryParse(
+        spaceIdx > 0 ? rest.substring(0, spaceIdx) : rest,
+      );
       final errorMsg = spaceIdx > 0 ? rest.substring(spaceIdx + 1) : rest;
       if (cmdNum != null) {
         final completer = _pending.remove(cmdNum);

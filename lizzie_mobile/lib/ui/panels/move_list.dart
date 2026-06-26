@@ -37,7 +37,10 @@ class MoveListPanel extends ConsumerWidget {
         Expanded(
           child: trunk.isEmpty
               ? const Center(
-                  child: Text('No moves yet', style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    'No moves yet',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 )
               : ListView.builder(
                   itemCount: trunk.length,
@@ -45,13 +48,19 @@ class MoveListPanel extends ConsumerWidget {
                     final node = trunk[index];
                     final d = node.data;
                     final moveNum = d.moveNumber;
-                    if (moveNum == 0) return const SizedBox.shrink(); // skip root
+                    if (moveNum == 0) {
+                      return const SizedBox.shrink(); // skip root
+                    }
 
                     final isCurrent = moveNum == currentMove;
                     final isBlack = d.lastMoveColor.isBlack;
                     final coord = d.lastMove != null
                         ? Coords.xyToGtp(
-                            d.lastMove![0], d.lastMove![1], d.width, d.height)
+                            d.lastMove![0],
+                            d.lastMove![1],
+                            d.width,
+                            d.height,
+                          )
                         : 'PASS';
                     final wr = d.winrate;
 
@@ -66,7 +75,9 @@ class MoveListPanel extends ConsumerWidget {
                           shape: BoxShape.circle,
                           color: isBlack ? Colors.black : Colors.white,
                           border: Border.all(
-                            color: isBlack ? Colors.transparent : Colors.grey[400]!,
+                            color: isBlack
+                                ? Colors.transparent
+                                : Colors.grey[400]!,
                           ),
                         ),
                       ),
@@ -76,13 +87,19 @@ class MoveListPanel extends ConsumerWidget {
                           Text(
                             '$moveNum. $coord',
                             style: TextStyle(
-                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               fontSize: 13,
                             ),
                           ),
                           if (d.comment.isNotEmpty) ...[
                             const SizedBox(width: 4),
-                            Icon(Icons.comment, size: 14, color: Colors.blueGrey[300]),
+                            Icon(
+                              Icons.comment,
+                              size: 14,
+                              color: Colors.blueGrey[300],
+                            ),
                           ],
                         ],
                       ),

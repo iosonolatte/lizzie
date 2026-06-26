@@ -10,7 +10,8 @@ class Coords {
   static const _gtpAlpha = 'ABCDEFGHJKLMNOPQRSTUVWXYZ';
 
   /// SGF alphabet: lowercase a-z, uppercase A-Z (52 chars, includes i).
-  static const _sgfAlpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  static const _sgfAlpha =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   // ---------------------------------------------------------------------------
   // GTP ↔ (x, y)

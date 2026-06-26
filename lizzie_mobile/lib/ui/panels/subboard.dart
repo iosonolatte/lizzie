@@ -62,8 +62,12 @@ class _SubboardPainter extends CustomPainter {
 
     // Background.
     canvas.drawRect(
-      Rect.fromLTWH(-cellSize * 0.1, -cellSize * 0.1,
-          size.width + cellSize * 0.2, size.height + cellSize * 0.2),
+      Rect.fromLTWH(
+        -cellSize * 0.1,
+        -cellSize * 0.1,
+        size.width + cellSize * 0.2,
+        size.height + cellSize * 0.2,
+      ),
       Paint()..color = const Color(0xFFDCB35C),
     );
 
@@ -160,23 +164,37 @@ class _SubboardPainter extends CustomPainter {
   static List<List<int>> _getStarPoints(int w, int h) {
     if (w == 19 && h == 19) {
       return [
-        [3, 3], [3, 9], [3, 15],
-        [9, 3], [9, 9], [9, 15],
-        [15, 3], [15, 9], [15, 15],
+        [3, 3],
+        [3, 9],
+        [3, 15],
+        [9, 3],
+        [9, 9],
+        [9, 15],
+        [15, 3],
+        [15, 9],
+        [15, 15],
       ];
     }
     if (w == 13 && h == 13) {
       return [
-        [3, 3], [3, 6], [3, 9],
-        [6, 3], [6, 6], [6, 9],
-        [9, 3], [9, 6], [9, 9],
+        [3, 3],
+        [3, 6],
+        [3, 9],
+        [6, 3],
+        [6, 6],
+        [6, 9],
+        [9, 3],
+        [9, 6],
+        [9, 9],
       ];
     }
     if (w == 9 && h == 9) {
       return [
-        [2, 2], [2, 6],
+        [2, 2],
+        [2, 6],
         [4, 4],
-        [6, 2], [6, 6],
+        [6, 2],
+        [6, 6],
       ];
     }
     return [];

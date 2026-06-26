@@ -11,7 +11,8 @@ class EngineSettingsSheet extends ConsumerStatefulWidget {
   const EngineSettingsSheet({super.key});
 
   @override
-  ConsumerState<EngineSettingsSheet> createState() => _EngineSettingsSheetState();
+  ConsumerState<EngineSettingsSheet> createState() =>
+      _EngineSettingsSheetState();
 }
 
 class _EngineSettingsSheetState extends ConsumerState<EngineSettingsSheet> {
@@ -186,7 +187,9 @@ class _EngineSettingsSheetState extends ConsumerState<EngineSettingsSheet> {
                 labelText: 'Port',
                 border: OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: false),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: false,
+              ),
               validator: (v) {
                 final port = int.tryParse(v ?? '');
                 if (port == null || port < 1 || port > 65535) {
@@ -202,7 +205,9 @@ class _EngineSettingsSheetState extends ConsumerState<EngineSettingsSheet> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: _isConnecting ? null : () => Navigator.pop(context),
+                  onPressed: _isConnecting
+                      ? null
+                      : () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 8),

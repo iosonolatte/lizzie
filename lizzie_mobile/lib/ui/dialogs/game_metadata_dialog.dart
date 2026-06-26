@@ -100,10 +100,7 @@ class _GameMetadataDialogState extends ConsumerState<GameMetadataDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _onSave,
-          child: const Text('Save'),
-        ),
+        FilledButton(onPressed: _onSave, child: const Text('Save')),
       ],
     );
   }
@@ -112,15 +109,17 @@ class _GameMetadataDialogState extends ConsumerState<GameMetadataDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     final gameController = ref.read(gameProvider.notifier);
-    gameController.updateGameInfo(GameInfo(
-      komi: gameController.gameInfo.komi,
-      handicap: gameController.gameInfo.handicap,
-      playerBlack: _blackController.text,
-      playerWhite: _whiteController.text,
-      gameName: _nameController.text,
-      gameDate: _dateController.text,
-      result: _resultController.text,
-    ));
+    gameController.updateGameInfo(
+      GameInfo(
+        komi: gameController.gameInfo.komi,
+        handicap: gameController.gameInfo.handicap,
+        playerBlack: _blackController.text,
+        playerWhite: _whiteController.text,
+        gameName: _nameController.text,
+        gameDate: _dateController.text,
+        result: _resultController.text,
+      ),
+    );
 
     Navigator.of(context).pop();
   }

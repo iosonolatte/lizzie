@@ -11,9 +11,10 @@ final gameProvider = NotifierProvider<GameController, Board>(
 );
 
 /// The engine connection and analysis state.
-final engineProvider = NotifierProvider<EngineController, AsyncValue<EngineStatus>>(
-  EngineController.new,
-);
+final engineProvider =
+    NotifierProvider<EngineController, AsyncValue<EngineStatus>>(
+      EngineController.new,
+    );
 
 /// Engine configuration persistence store.
 final engineConfigStoreProvider = Provider<EngineConfigStore>((ref) {

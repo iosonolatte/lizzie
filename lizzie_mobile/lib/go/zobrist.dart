@@ -44,8 +44,7 @@ class Zobrist {
   }
 
   @override
-  bool operator ==(Object other) =>
-      other is Zobrist && _zhash == other._zhash;
+  bool operator ==(Object other) => other is Zobrist && _zhash == other._zhash;
 
   @override
   int get hashCode => _zhash;

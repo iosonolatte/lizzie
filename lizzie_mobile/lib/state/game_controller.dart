@@ -169,11 +169,7 @@ class GameController extends Notifier<Board> {
       final node = trunkNodes[i];
       final d = node.data;
       if (d.lastMove != null) {
-        newBoard.place(
-          d.lastMove![0],
-          d.lastMove![1],
-          d.lastMoveColor,
-        );
+        newBoard.place(d.lastMove![0], d.lastMove![1], d.lastMoveColor);
       } else {
         // Pass.
         newBoard.pass();

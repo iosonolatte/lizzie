@@ -3,7 +3,8 @@ import '../go/move_data.dart';
 /// Full analysis result from the engine.
 class AnalysisResult {
   final List<MoveData> bestMoves;
-  final List<double>? ownership; // board-width × board-height, signed (positive = black)
+  final List<double>?
+  ownership; // board-width × board-height, signed (positive = black)
   final double scoreMean;
   final double scoreStdev;
   final int currentPlayouts;

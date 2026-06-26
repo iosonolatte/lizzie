@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lizzie_mobile/ui/screens/analysis_screen.dart';
 
 void main() {
-  testWidgets('Analysis screen renders with ProviderScope', (WidgetTester tester) async {
+  testWidgets('Analysis screen renders with ProviderScope', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: AnalysisScreen())),
     );

@@ -1,12 +1,12 @@
 import 'package:test/test.dart';
-import '../lib/go/stone.dart';
-import '../lib/go/zobrist.dart';
-import '../lib/go/board_data.dart';
-import '../lib/go/board.dart';
-import '../lib/go/board_history_list.dart';
-import '../lib/go/coords.dart';
-import '../lib/go/handicap.dart';
-import '../lib/go/move_data.dart';
+import 'package:lizzie_mobile/go/stone.dart';
+import 'package:lizzie_mobile/go/zobrist.dart';
+import 'package:lizzie_mobile/go/board_data.dart';
+import 'package:lizzie_mobile/go/board.dart';
+import 'package:lizzie_mobile/go/board_history_list.dart';
+import 'package:lizzie_mobile/go/coords.dart';
+import 'package:lizzie_mobile/go/handicap.dart';
+import 'package:lizzie_mobile/go/move_data.dart';
 
 void main() {
   // ===========================================================================
@@ -139,7 +139,11 @@ void main() {
     });
 
     test('SGF round-trip', () {
-      for (final pt in [[0, 0], [3, 15], [18, 18]]) {
+      for (final pt in [
+        [0, 0],
+        [3, 15],
+        [18, 18],
+      ]) {
         final sgf = Coords.xyToSgf(pt[0], pt[1]);
         final back = Coords.sgfToXY(sgf, 19, 19);
         expect(back, equals(pt));
@@ -234,12 +238,12 @@ void main() {
       board.place(1, 0, Stone.black); // B1
       board.place(0, 1, Stone.white); // W2
       board.place(0, 0, Stone.black); // B3
-      
+
       // Let me just test the ko rule directly via BoardHistoryList.
       board.place(0, 0, Stone.black);
       board.place(1, 1, Stone.white);
       board.place(2, 2, Stone.black);
-      
+
       // The ko check is unit-testable via the history list.
       final history = board.history;
       expect(history.canGoBack, isTrue);
@@ -310,7 +314,8 @@ void main() {
       final history = BoardHistoryList(root);
 
       final m1 = BoardData(
-        width: 5, height: 5,
+        width: 5,
+        height: 5,
         stones: List.filled(25, Stone.empty),
         lastMove: [2, 2],
         lastMoveColor: Stone.black,
@@ -337,7 +342,8 @@ void main() {
 
       for (int i = 0; i < 5; i++) {
         final d = BoardData(
-          width: 5, height: 5,
+          width: 5,
+          height: 5,
           stones: List.filled(25, Stone.empty),
           lastMove: [i, i],
           lastMoveColor: i.isEven ? Stone.black : Stone.white,
@@ -362,7 +368,8 @@ void main() {
   // ===========================================================================
   group('MoveData parsing', () {
     test('fromInfoKatago parses a typical line', () {
-      const line = 'move Q5 visits 9 utility -0.145503 winrate 0.430823 '
+      const line =
+          'move Q5 visits 9 utility -0.145503 winrate 0.430823 '
           'scoreMean -1.88438 scoreStdev 23.8437 prior 0.000681463 lcb 0.420129 '
           'order 15 pv Q5 D16 D4';
       final md = MoveData.fromInfoKatago(line);
@@ -389,7 +396,8 @@ void main() {
     });
 
     test('LCB override works', () {
-      const line = 'move Q5 visits 9 winrate 0.430823 lcb 0.520000 order 0 pv Q5 D16';
+      const line =
+          'move Q5 visits 9 winrate 0.430823 lcb 0.520000 order 0 pv Q5 D16';
       final mdNormal = MoveData.fromInfoKatago(line, useLcbWinrate: false);
       final mdLcb = MoveData.fromInfoKatago(line, useLcbWinrate: true);
 

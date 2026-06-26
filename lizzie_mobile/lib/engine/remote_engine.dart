@@ -31,7 +31,9 @@ class RemoteEngine implements Engine {
 
   @override
   Future<void> start(EngineConfig config) async {
-    _statusController.add(Connecting('Connecting to ${config.host}:${config.port}...'));
+    _statusController.add(
+      Connecting('Connecting to ${config.host}:${config.port}...'),
+    );
     _isPondering = false;
 
     try {
@@ -68,7 +70,11 @@ class RemoteEngine implements Engine {
   }
 
   @override
-  Future<void> initGame(int boardSize, {double komi = 6.5, int handicap = 0}) async {
+  Future<void> initGame(
+    int boardSize, {
+    double komi = 6.5,
+    int handicap = 0,
+  }) async {
     _boardWidth = boardSize;
     _boardHeight = boardSize;
     await _client!.send('boardsize $boardSize');
@@ -144,7 +150,9 @@ class RemoteEngine implements Engine {
     // Check for ownership data.
     final ownershipIdx = body.indexOf('ownership');
     if (ownershipIdx >= 0) {
-      final ownershipStr = body.substring(ownershipIdx + 'ownership'.length).trim();
+      final ownershipStr = body
+          .substring(ownershipIdx + 'ownership'.length)
+          .trim();
       ownership = ownershipStr
           .split(' ')
           .where((s) => s.isNotEmpty)
@@ -158,34 +166,44 @@ class RemoteEngine implements Engine {
     }
 
     if (_isKataGo) {
-      moves = body.split(' info ').map((part) {
-        final trimmed = part.trim();
-        if (trimmed.isEmpty) return null;
-        try {
-          return MoveData.fromInfoKatago(trimmed);
-        } catch (_) {
-          return null;
-        }
-      }).whereType<MoveData>().toList();
+      moves = body
+          .split(' info ')
+          .map((part) {
+            final trimmed = part.trim();
+            if (trimmed.isEmpty) return null;
+            try {
+              return MoveData.fromInfoKatago(trimmed);
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<MoveData>()
+          .toList();
     } else {
-      moves = body.split(' info ').map((part) {
-        final trimmed = part.trim();
-        if (trimmed.isEmpty) return null;
-        try {
-          return MoveData.fromInfo(trimmed);
-        } catch (_) {
-          return null;
-        }
-      }).whereType<MoveData>().toList();
+      moves = body
+          .split(' info ')
+          .map((part) {
+            final trimmed = part.trim();
+            if (trimmed.isEmpty) return null;
+            try {
+              return MoveData.fromInfo(trimmed);
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<MoveData>()
+          .toList();
     }
 
-    _analysisController.add(AnalysisResult(
-      bestMoves: moves,
-      ownership: ownership,
-      scoreMean: moves.isNotEmpty ? moves.first.scoreMean : 0.0,
-      scoreStdev: moves.isNotEmpty ? moves.first.scoreStdev : 0.0,
-      currentPlayouts: MoveData.totalPlayouts(moves),
-    ));
+    _analysisController.add(
+      AnalysisResult(
+        bestMoves: moves,
+        ownership: ownership,
+        scoreMean: moves.isNotEmpty ? moves.first.scoreMean : 0.0,
+        scoreStdev: moves.isNotEmpty ? moves.first.scoreStdev : 0.0,
+        currentPlayouts: MoveData.totalPlayouts(moves),
+      ),
+    );
   }
 
   void _parseHandicapResponse(String response) {

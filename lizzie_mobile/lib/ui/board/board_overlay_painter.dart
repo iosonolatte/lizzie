@@ -102,10 +102,16 @@ class BoardOverlayPainter extends CustomPainter {
   void _drawSuggestions(Canvas canvas, Size size) {
     if (bestMoves.isEmpty) return;
 
-    final totalVisits = totalPlayouts > 0 ? totalPlayouts : MoveData.totalPlayouts(bestMoves);
+    final totalVisits = totalPlayouts > 0
+        ? totalPlayouts
+        : MoveData.totalPlayouts(bestMoves);
 
     for (final move in bestMoves) {
-      final xy = Coords.gtpToXY(move.coordinate, boardData.width, boardData.height);
+      final xy = Coords.gtpToXY(
+        move.coordinate,
+        boardData.width,
+        boardData.height,
+      );
       if (xy == null) continue;
 
       final x = xy[0];
@@ -117,7 +123,9 @@ class BoardOverlayPainter extends CustomPainter {
       final color = _suggestionColor(move.winrate);
 
       // Calculate alpha from playout fraction (log-based).
-      final playoutFraction = totalVisits > 0 ? move.playouts / totalVisits : 0.0;
+      final playoutFraction = totalVisits > 0
+          ? move.playouts / totalVisits
+          : 0.0;
       final alpha = _playoutAlpha(playoutFraction);
 
       // Draw filled circle.
@@ -194,10 +202,13 @@ class BoardOverlayPainter extends CustomPainter {
 
     // Playouts line.
     final plPainter = TextPainter(
-      text: TextSpan(text: playoutsStr, style: textStyle.copyWith(
-        fontSize: cellSize * 0.18,
-        fontWeight: FontWeight.normal,
-      )),
+      text: TextSpan(
+        text: playoutsStr,
+        style: textStyle.copyWith(
+          fontSize: cellSize * 0.18,
+          fontWeight: FontWeight.normal,
+        ),
+      ),
       textDirection: TextDirection.ltr,
     );
     plPainter.layout(maxWidth: cellSize * 0.7);

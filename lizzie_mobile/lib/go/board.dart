@@ -20,10 +20,10 @@ class Board {
   final BoardHistoryList history;
 
   Board({int width = 19, int height = 19})
-      : width = width,
-        height = height,
-        _zobrist = Zobrist.init(width, height, 0),
-        history = BoardHistoryList(BoardData.empty(width: width, height: height));
+    : width = width,
+      height = height,
+      _zobrist = Zobrist.init(width, height, 0),
+      history = BoardHistoryList(BoardData.empty(width: width, height: height));
 
   // ---------------------------------------------------------------------------
   // Coordinate utilities
@@ -31,16 +31,14 @@ class Board {
 
   int indexOf(int x, int y) => x * height + y;
 
-  bool isValid(int x, int y) =>
-      x >= 0 && x < width && y >= 0 && y < height;
+  bool isValid(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
 
   /// Parse a GTP coordinate string like "C16" → [x, y].
   List<int>? parseGtpCoord(String coord) =>
       Coords.gtpToXY(coord, width, height);
 
   /// Convert [x, y] to a GTP string like "C16".
-  String? coordToGtp(int x, int y) =>
-      Coords.xyToGtp(x, y, width, height);
+  String? coordToGtp(int x, int y) => Coords.xyToGtp(x, y, width, height);
 
   /// Convert [x, y] to an SGF string like "cd".
   String coordToSgf(int x, int y) => Coords.xyToSgf(x, y);
@@ -65,7 +63,13 @@ class Board {
   /// MUTATES `stones` in place (marks visited cells with `*_RECURSED` variants).
   /// Caller MUST follow up with [cleanupHasLibertiesHelper].
   static bool _hasLibertiesHelper(
-      int x, int y, Stone color, List<Stone> stones, int w, int h) {
+    int x,
+    int y,
+    Stone color,
+    List<Stone> stones,
+    int w,
+    int h,
+  ) {
     if (x < 0 || x >= w || y < 0 || y >= h) return false;
     final idx = x * h + y;
     final s = stones[idx];
@@ -80,8 +84,16 @@ class Board {
 
   /// Cleanup after [hasLibertiesHelper]: either restore stones or remove them.
   /// Returns number of stones removed.
-  static int _cleanupHelper(int x, int y, Stone recursedColor,
-      List<Stone> stones, Zobrist zobrist, int w, int h, bool remove) {
+  static int _cleanupHelper(
+    int x,
+    int y,
+    Stone recursedColor,
+    List<Stone> stones,
+    Zobrist zobrist,
+    int w,
+    int h,
+    bool remove,
+  ) {
     if (x < 0 || x >= w || y < 0 || y >= h) return 0;
     final idx = x * h + y;
     if (stones[idx] != recursedColor) return 0;
@@ -92,22 +104,74 @@ class Board {
       stones[idx] = recursedColor.unrecursed;
     }
     int removed = remove ? 1 : 0;
-    removed += _cleanupHelper(x + 1, y, recursedColor, stones, zobrist, w, h, remove);
-    removed += _cleanupHelper(x, y + 1, recursedColor, stones, zobrist, w, h, remove);
-    removed += _cleanupHelper(x - 1, y, recursedColor, stones, zobrist, w, h, remove);
-    removed += _cleanupHelper(x, y - 1, recursedColor, stones, zobrist, w, h, remove);
+    removed += _cleanupHelper(
+      x + 1,
+      y,
+      recursedColor,
+      stones,
+      zobrist,
+      w,
+      h,
+      remove,
+    );
+    removed += _cleanupHelper(
+      x,
+      y + 1,
+      recursedColor,
+      stones,
+      zobrist,
+      w,
+      h,
+      remove,
+    );
+    removed += _cleanupHelper(
+      x - 1,
+      y,
+      recursedColor,
+      stones,
+      zobrist,
+      w,
+      h,
+      remove,
+    );
+    removed += _cleanupHelper(
+      x,
+      y - 1,
+      recursedColor,
+      stones,
+      zobrist,
+      w,
+      h,
+      remove,
+    );
     return removed;
   }
 
   /// Remove a dead chain (group with no liberties) starting at (x, y).
   /// Returns number of stones removed.
-  static int _removeDeadChain(int x, int y, Stone color, List<Stone> stones,
-      Zobrist zobrist, int w, int h) {
+  static int _removeDeadChain(
+    int x,
+    int y,
+    Stone color,
+    List<Stone> stones,
+    Zobrist zobrist,
+    int w,
+    int h,
+  ) {
     if (!(x >= 0 && x < w && y >= 0 && y < h)) return 0;
     final idx = x * h + y;
     if (stones[idx] != color) return 0;
     final hasLibs = _hasLibertiesHelper(x, y, color, stones, w, h);
-    return _cleanupHelper(x, y, color.recursed, stones, zobrist, w, h, !hasLibs);
+    return _cleanupHelper(
+      x,
+      y,
+      color.recursed,
+      stones,
+      zobrist,
+      w,
+      h,
+      !hasLibs,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -127,7 +191,13 @@ class Board {
 
   /// Place a stone at (x, y) of [color].
   /// Returns true if the move was accepted, false if illegal.
-  bool place(int x, int y, Stone color, {bool newBranch = false, bool changeMove = false}) {
+  bool place(
+    int x,
+    int y,
+    Stone color, {
+    bool newBranch = false,
+    bool changeMove = false,
+  }) {
     if (!isValid(x, y)) return false;
 
     final stones = data.stones.toList(growable: false);
@@ -153,13 +223,53 @@ class Board {
 
     // Capture opponent groups around the placed stone.
     int capturedStones = 0;
-    capturedStones += _removeDeadChain(x + 1, y, color.opposite, stones, zobrist, width, height);
-    capturedStones += _removeDeadChain(x, y + 1, color.opposite, stones, zobrist, width, height);
-    capturedStones += _removeDeadChain(x - 1, y, color.opposite, stones, zobrist, width, height);
-    capturedStones += _removeDeadChain(x, y - 1, color.opposite, stones, zobrist, width, height);
+    capturedStones += _removeDeadChain(
+      x + 1,
+      y,
+      color.opposite,
+      stones,
+      zobrist,
+      width,
+      height,
+    );
+    capturedStones += _removeDeadChain(
+      x,
+      y + 1,
+      color.opposite,
+      stones,
+      zobrist,
+      width,
+      height,
+    );
+    capturedStones += _removeDeadChain(
+      x - 1,
+      y,
+      color.opposite,
+      stones,
+      zobrist,
+      width,
+      height,
+    );
+    capturedStones += _removeDeadChain(
+      x,
+      y - 1,
+      color.opposite,
+      stones,
+      zobrist,
+      width,
+      height,
+    );
 
     // Check suicide — does the just-placed group have liberties?
-    final isSuicidal = _removeDeadChain(x, y, color, stones, zobrist, width, height);
+    final isSuicidal = _removeDeadChain(
+      x,
+      y,
+      color,
+      stones,
+      zobrist,
+      width,
+      height,
+    );
 
     // Clear move numbers on empty cells.
     for (int i = 0; i < stones.length; i++) {
@@ -202,9 +312,19 @@ class Board {
   }
 
   /// Place a stone alternating colors (auto-detect from board state).
-  bool placeAuto(int x, int y, {bool newBranch = false, bool changeMove = false}) {
-    return place(x, y, data.blackToPlay ? Stone.black : Stone.white,
-        newBranch: newBranch, changeMove: changeMove);
+  bool placeAuto(
+    int x,
+    int y, {
+    bool newBranch = false,
+    bool changeMove = false,
+  }) {
+    return place(
+      x,
+      y,
+      data.blackToPlay ? Stone.black : Stone.white,
+      newBranch: newBranch,
+      changeMove: changeMove,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -347,9 +467,17 @@ class Board {
   /// Returns 0 = dame, 1 = black territory, 2 = white territory.
   /// Uses [visited] boolean list to avoid re-visiting.
   static int _floodFillTerritory(
-      int x, int y, List<Stone> stones, List<bool> visited, int w, int h) {
+    int x,
+    int y,
+    List<Stone> stones,
+    List<bool> visited,
+    int w,
+    int h,
+  ) {
     int result = 0; // bit 0 = black touch, bit 1 = white touch
-    final queue = <List<int>>[[x, y]];
+    final queue = <List<int>>[
+      [x, y],
+    ];
     visited[x * h + y] = true;
 
     while (queue.isNotEmpty) {
@@ -358,7 +486,10 @@ class Board {
       final py = pos[1];
 
       for (final dir in [
-        [1, 0], [-1, 0], [0, 1], [0, -1]
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
       ]) {
         final nx = px + dir[0];
         final ny = py + dir[1];

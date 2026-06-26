@@ -18,7 +18,12 @@ class BoardWidget extends ConsumerWidget {
   /// Whether scoring mode is active (shows dead-stone markers).
   final bool scoringMode;
 
-  const BoardWidget({super.key, this.onPointTap, this.analysis, this.scoringMode = false});
+  const BoardWidget({
+    super.key,
+    this.onPointTap,
+    this.analysis,
+    this.scoringMode = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -126,8 +131,12 @@ class _BoardPainter extends CustomPainter {
     // Board background.
     final bgPaint = Paint()..color = const Color(0xFFDCB35C); // wood color
     canvas.drawRect(
-      Rect.fromLTWH(-cellSize / 2, -cellSize / 2,
-          size.width + cellSize, size.height + cellSize),
+      Rect.fromLTWH(
+        -cellSize / 2,
+        -cellSize / 2,
+        size.width + cellSize,
+        size.height + cellSize,
+      ),
       bgPaint,
     );
 
@@ -138,19 +147,11 @@ class _BoardPainter extends CustomPainter {
 
     for (int i = 0; i < w; i++) {
       final x = i * cellSize;
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, (h - 1) * cellSize),
-        linePaint,
-      );
+      canvas.drawLine(Offset(x, 0), Offset(x, (h - 1) * cellSize), linePaint);
     }
     for (int i = 0; i < h; i++) {
       final y = i * cellSize;
-      canvas.drawLine(
-        Offset(0, y),
-        Offset((w - 1) * cellSize, y),
-        linePaint,
-      );
+      canvas.drawLine(Offset(0, y), Offset((w - 1) * cellSize, y), linePaint);
     }
 
     // Star points.
@@ -178,7 +179,8 @@ class _BoardPainter extends CustomPainter {
         final radius = cellSize * 0.44;
 
         // Determine visual color (dead stones still render as their original color).
-        final isDead = stone == Stone.blackCaptured || stone == Stone.whiteCaptured;
+        final isDead =
+            stone == Stone.blackCaptured || stone == Stone.whiteCaptured;
         final visualBlack = isDead
             ? (stone == Stone.blackCaptured)
             : stone.isBlack;
@@ -188,30 +190,30 @@ class _BoardPainter extends CustomPainter {
           final gradient = RadialGradient(
             center: const Alignment(-0.3, -0.3),
             radius: 0.8,
-            colors: [
-              Colors.grey[700]!,
-              Colors.black,
-            ],
+            colors: [Colors.grey[700]!, Colors.black],
           );
           canvas.drawCircle(
             Offset(cx, cy),
             radius,
-            Paint()..shader = gradient.createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius)),
+            Paint()
+              ..shader = gradient.createShader(
+                Rect.fromCircle(center: Offset(cx, cy), radius: radius),
+              ),
           );
         } else {
           // White stone with 3D effect.
           final gradient = RadialGradient(
             center: const Alignment(-0.3, -0.3),
             radius: 0.8,
-            colors: [
-              Colors.white,
-              Colors.grey[300]!,
-            ],
+            colors: [Colors.white, Colors.grey[300]!],
           );
           canvas.drawCircle(
             Offset(cx, cy),
             radius,
-            Paint()..shader = gradient.createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius)),
+            Paint()
+              ..shader = gradient.createShader(
+                Rect.fromCircle(center: Offset(cx, cy), radius: radius),
+              ),
           );
           // Border.
           canvas.drawCircle(
@@ -260,13 +262,13 @@ class _BoardPainter extends CustomPainter {
 
     // Coordinates.
     if (showCoordinates) {
-      final textPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-      );
+      final textPainter = TextPainter(textDirection: TextDirection.ltr);
       for (int i = 0; i < w; i++) {
-        final label = String.fromCharCode('A'.codeUnitAt(0) + i >= 'I'.codeUnitAt(0)
-            ? 'A'.codeUnitAt(0) + i + 1
-            : 'A'.codeUnitAt(0) + i);
+        final label = String.fromCharCode(
+          'A'.codeUnitAt(0) + i >= 'I'.codeUnitAt(0)
+              ? 'A'.codeUnitAt(0) + i + 1
+              : 'A'.codeUnitAt(0) + i,
+        );
         textPainter.text = TextSpan(
           text: label,
           style: const TextStyle(color: Colors.black54, fontSize: 10),
@@ -285,7 +287,10 @@ class _BoardPainter extends CustomPainter {
         textPainter.layout();
         textPainter.paint(
           canvas,
-          Offset(-cellSize * 0.6 - textPainter.width, i * cellSize - textPainter.height / 2),
+          Offset(
+            -cellSize * 0.6 - textPainter.width,
+            i * cellSize - textPainter.height / 2,
+          ),
         );
       }
     }
@@ -302,23 +307,37 @@ class _BoardPainter extends CustomPainter {
   static List<List<int>> _getStarPoints(int w, int h) {
     if (w == 19 && h == 19) {
       return [
-        [3, 3], [3, 9], [3, 15],
-        [9, 3], [9, 9], [9, 15],
-        [15, 3], [15, 9], [15, 15],
+        [3, 3],
+        [3, 9],
+        [3, 15],
+        [9, 3],
+        [9, 9],
+        [9, 15],
+        [15, 3],
+        [15, 9],
+        [15, 15],
       ];
     }
     if (w == 13 && h == 13) {
       return [
-        [3, 3], [3, 6], [3, 9],
-        [6, 3], [6, 6], [6, 9],
-        [9, 3], [9, 6], [9, 9],
+        [3, 3],
+        [3, 6],
+        [3, 9],
+        [6, 3],
+        [6, 6],
+        [6, 9],
+        [9, 3],
+        [9, 6],
+        [9, 9],
       ];
     }
     if (w == 9 && h == 9) {
       return [
-        [2, 2], [2, 6],
+        [2, 2],
+        [2, 6],
         [4, 4],
-        [6, 2], [6, 6],
+        [6, 2],
+        [6, 6],
       ];
     }
     return [];

@@ -30,8 +30,8 @@ class ScoringResultDialog extends StatelessWidget {
     final resultStr = scoreDiff > 0
         ? 'B+${scoreDiff.toStringAsFixed(1)}'
         : scoreDiff < 0
-            ? 'W+${(-scoreDiff).toStringAsFixed(1)}'
-            : 'Draw';
+        ? 'W+${(-scoreDiff).toStringAsFixed(1)}'
+        : 'Draw';
 
     return AlertDialog(
       title: const Text('Scoring Result'),
@@ -73,10 +73,7 @@ class ScoringResultDialog extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 14)),
-          Text(
-            value,
-            style: valueStyle ?? const TextStyle(fontSize: 14),
-          ),
+          Text(value, style: valueStyle ?? const TextStyle(fontSize: 14)),
         ],
       ),
     );

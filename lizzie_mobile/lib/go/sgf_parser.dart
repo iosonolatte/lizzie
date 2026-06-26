@@ -19,7 +19,10 @@ import 'zobrist.dart';
 class SgfParser {
   /// Load an SGF string into a [BoardHistoryList] with its metadata.
   /// Returns a new BoardHistoryList independent of any live board.
-  static (BoardHistoryList, GameInfo) parse(String sgf, {int defaultSize = 19}) {
+  static (BoardHistoryList, GameInfo) parse(
+    String sgf, {
+    int defaultSize = 19,
+  }) {
     // Strip whitespace and normalize.
     final cleaned = sgf.replaceAll(RegExp(r'\s+'), ' ').trim();
 
@@ -32,13 +35,20 @@ class SgfParser {
     }
 
     final rootContent = rootMatch.group(1)!.trim();
-    final (history, gameInfo) = _parseNodes(rootContent, defaultSize, GameInfo());
+    final (history, gameInfo) = _parseNodes(
+      rootContent,
+      defaultSize,
+      GameInfo(),
+    );
     return (history, gameInfo);
   }
 
   /// Parse a sequence of nodes from the SGF content.
   static (BoardHistoryList, GameInfo) _parseNodes(
-      String content, int defaultSize, GameInfo baseInfo) {
+    String content,
+    int defaultSize,
+    GameInfo baseInfo,
+  ) {
     // Extract root node properties.
     final rootProps = <String, String>{};
     final rootNodeMatch = RegExp(r'^;([^;()]*)').firstMatch(content);
@@ -56,7 +66,9 @@ class SgfParser {
     final width = int.tryParse(dims[0]) ?? defaultSize;
     final height = int.tryParse(dims.length > 1 ? dims[1] : dims[0]) ?? width;
 
-    final history = BoardHistoryList(BoardData.empty(width: width, height: height));
+    final history = BoardHistoryList(
+      BoardData.empty(width: width, height: height),
+    );
     final zobrist = Zobrist.init(width, height, 0);
 
     // Handle setup stones (AB/AW) at root.
@@ -67,10 +79,16 @@ class SgfParser {
     }
 
     // Extract game metadata from root properties.
-    final komi = double.tryParse(rootProps['KM'] ?? rootProps['km'] ?? '') ?? baseInfo.komi;
-    final handicap = int.tryParse(rootProps['HA'] ?? rootProps['ha'] ?? '') ?? baseInfo.handicap;
-    final playerBlack = rootProps['PB'] ?? rootProps['pb'] ?? baseInfo.playerBlack;
-    final playerWhite = rootProps['PW'] ?? rootProps['pw'] ?? baseInfo.playerWhite;
+    final komi =
+        double.tryParse(rootProps['KM'] ?? rootProps['km'] ?? '') ??
+        baseInfo.komi;
+    final handicap =
+        int.tryParse(rootProps['HA'] ?? rootProps['ha'] ?? '') ??
+        baseInfo.handicap;
+    final playerBlack =
+        rootProps['PB'] ?? rootProps['pb'] ?? baseInfo.playerBlack;
+    final playerWhite =
+        rootProps['PW'] ?? rootProps['pw'] ?? baseInfo.playerWhite;
     final result = rootProps['RE'] ?? rootProps['re'] ?? baseInfo.result;
     final gameName = rootProps['GN'] ?? rootProps['gn'] ?? baseInfo.gameName;
     final gameDate = rootProps['DT'] ?? rootProps['dt'] ?? baseInfo.gameDate;
@@ -96,7 +114,11 @@ class SgfParser {
 
   /// Apply AB/AW setup stones to the history root.
   static void _applySetupStones(
-      BoardHistoryList history, String abList, String awList, Zobrist zobrist) {
+    BoardHistoryList history,
+    String abList,
+    String awList,
+    Zobrist zobrist,
+  ) {
     final w = history.data.width;
     final h = history.data.height;
 
@@ -126,7 +148,12 @@ class SgfParser {
 
   /// Parse the content after the root node, handling moves and `(...)` variations.
   static void _parseBranchContent(
-      String content, BoardHistoryList history, int width, int height, Zobrist zobrist) {
+    String content,
+    BoardHistoryList history,
+    int width,
+    int height,
+    Zobrist zobrist,
+  ) {
     int i = 0;
     final nodeStack = <_NodeFrame>[];
 
@@ -141,10 +168,9 @@ class SgfParser {
         i = nodeEnd;
       } else if (ch == '(') {
         // Start of a variation branch.
-        nodeStack.add(_NodeFrame(
-          node: history.head,
-          depth: _countOpenParens(content, i),
-        ));
+        nodeStack.add(
+          _NodeFrame(node: history.head, depth: _countOpenParens(content, i)),
+        );
         i++;
       } else if (ch == ')') {
         // End of a variation branch. Restore the parent node.
@@ -191,7 +217,9 @@ class SgfParser {
 
   /// Extract properties from a node content string (between ; and next node/bracket).
   static void _extractProperties(String content, Map<String, String> props) {
-    final propMatch = RegExp(r'([A-Za-z]+)((?:\[[^\]]*\])+)').allMatches(content);
+    final propMatch = RegExp(
+      r'([A-Za-z]+)((?:\[[^\]]*\])+)',
+    ).allMatches(content);
     for (final m in propMatch) {
       final name = m.group(1)!;
       final values = m.group(2)!;
@@ -204,7 +232,12 @@ class SgfParser {
 
   /// Apply a single node's properties to the history (making a move if B or W).
   static void _applyNode(
-      String nodeContent, BoardHistoryList history, int width, int height, Zobrist zobrist) {
+    String nodeContent,
+    BoardHistoryList history,
+    int width,
+    int height,
+    Zobrist zobrist,
+  ) {
     final props = <String, String>{};
     _extractProperties(nodeContent, props);
 
@@ -232,8 +265,14 @@ class SgfParser {
   }
 
   /// Play a move from an SGF coordinate string.
-  static void _playFromSgf(String coord, Stone color,
-      BoardHistoryList history, int width, int height, Zobrist zobrist) {
+  static void _playFromSgf(
+    String coord,
+    Stone color,
+    BoardHistoryList history,
+    int width,
+    int height,
+    Zobrist zobrist,
+  ) {
     final xy = Coords.sgfToXY(coord, width, height);
     final stones = history.data.stones.toList(growable: false);
     final zobristClone = zobrist.clone();
@@ -304,9 +343,7 @@ class SgfParser {
 
   /// Escape SGF text (replace \ with \\, ] with \]).
   static String _escapeSgf(String s) {
-    return s
-        .replaceAll('\\', '\\\\')
-        .replaceAll(']', '\\]');
+    return s.replaceAll('\\', '\\\\').replaceAll(']', '\\]');
   }
 
   // ---------------------------------------------------------------------------
@@ -317,7 +354,11 @@ class SgfParser {
   ///
   /// Optionally accepts a [GameInfo] for metadata (komi, handicap, player names).
   /// If omitted, default values are used.
-  static String serialize(BoardHistoryList history, {String appName = 'Lizzie', GameInfo? gameInfo}) {
+  static String serialize(
+    BoardHistoryList history, {
+    String appName = 'Lizzie',
+    GameInfo? gameInfo,
+  }) {
     final buf = StringBuffer();
     final root = history.root;
     final data = root.data;
@@ -362,7 +403,11 @@ class SgfParser {
 
   /// Recursively serialize a node and its variations.
   static void _serializeNode(
-      StringBuffer buf, BoardHistoryNode node, int width, int height) {
+    StringBuffer buf,
+    BoardHistoryNode node,
+    int width,
+    int height,
+  ) {
     // Skip the root node (no move to write).
     if (node.previous != null) {
       final data = node.data;
@@ -407,8 +452,5 @@ class _NodeFrame {
   final BoardHistoryNode node;
   final int depth;
 
-  const _NodeFrame({
-    required this.node,
-    required this.depth,
-  });
+  const _NodeFrame({required this.node, required this.depth});
 }

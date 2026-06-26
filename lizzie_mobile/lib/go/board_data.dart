@@ -96,6 +96,5 @@ class BoardData {
 
   int indexOf(int x, int y) => x * height + y;
 
-  bool isValid(int x, int y) =>
-      x >= 0 && x < width && y >= 0 && y < height;
+  bool isValid(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
 }
