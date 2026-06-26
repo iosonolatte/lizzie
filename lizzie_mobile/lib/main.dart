@@ -9,14 +9,28 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Go board wood tone (katsura / kaya).
+  static const _seed = Color(0xFF8B5A2B);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lizzie Mobile',
+      title: 'Lizzie',
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.system,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _seed,
+          brightness: Brightness.light,
+        ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _seed,
+          brightness: Brightness.dark,
+        ),
       ),
       home: const AnalysisScreen(),
     );
