@@ -15,3 +15,5 @@ target
 leelaz_opencl_tuning
 *.sh
 *.jar
+katago/
+lizzie_mobile/
