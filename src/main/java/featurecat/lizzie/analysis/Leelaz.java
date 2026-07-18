@@ -762,7 +762,25 @@ public class Leelaz {
 
   /** End the process */
   public void shutdown() {
-    if (process != null) process.destroy();
+    if (process != null) {
+      try {
+        if (inputStream != null) {
+          inputStream.close();
+        }
+        if (outputStream != null) {
+          outputStream.close();
+        }
+        process.destroy();
+        if (!process.waitFor(5, TimeUnit.SECONDS)) {
+          process.destroyForcibly();
+        }
+      } catch (IOException | InterruptedException e) {
+        process.destroyForcibly();
+        if (e instanceof InterruptedException) {
+          Thread.currentThread().interrupt();
+        }
+      }
+    }
   }
 
   public List<MoveData> getBestMoves() {
