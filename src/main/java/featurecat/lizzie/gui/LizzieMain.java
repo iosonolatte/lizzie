@@ -663,12 +663,15 @@ public class LizzieMain extends MainFrame {
         e1.printStackTrace();
       }
       isFirstCount = false;
-    } else if (!zen.process.isAlive()) {
+    } else if (zen.process == null || !zen.process.isAlive()) {
       try {
         zen = new YaZenGtp();
       } catch (IOException e1) {
         e1.printStackTrace();
       }
+    }
+    if (zen.process == null) {
+      return;
     }
     zen.noRead = false;
     zen.syncBoradStat();

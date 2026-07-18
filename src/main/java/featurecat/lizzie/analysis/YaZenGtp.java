@@ -54,6 +54,7 @@ public class YaZenGtp {
     } catch (IOException e) {
       // TODO Auto-generated catch block
       JOptionPane.showMessageDialog(null, resourceBundle.getString("YaZenGtp.nofile"));
+      process = null;
       return;
     }
     initializeStreams();
@@ -156,7 +157,9 @@ public class YaZenGtp {
   }
 
   public void shutdown() {
-    process.destroy();
+    if (process != null) {
+      process.destroy();
+    }
   }
 
   public void sendCommand(String command) {
@@ -186,6 +189,9 @@ public class YaZenGtp {
     } catch (Exception ex) {
     }
     cmdNumber++;
+    if (outputStream == null) {
+      return;
+    }
     try {
       outputStream.write((command + "\n").getBytes());
       outputStream.flush();
