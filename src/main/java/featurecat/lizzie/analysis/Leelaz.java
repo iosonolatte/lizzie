@@ -338,9 +338,10 @@ public class Leelaz {
       } else if (line.startsWith("Tuning")) {
         // Show GTP console during initial tuning of KataGo
         // to avoid long no-response
-        if (!Lizzie.gtpConsole.isVisible()) {
-          Lizzie.frame.toggleGtpConsole();
-        }
+        // Disabled: do not auto-popup GTP console
+        // if (!Lizzie.gtpConsole.isVisible()) {
+        //   Lizzie.frame.toggleGtpConsole();
+        // }
       } else if (line.equals("\n")) {
         // End of response
       } else if (line.startsWith("info")) {
@@ -501,9 +502,10 @@ public class Leelaz {
       // this line will be reached when Leelaz shuts down
       System.out.println("Engine process ended.");
       if (!isQuittingNormally) {
-        if (!Lizzie.gtpConsole.isVisible()) {
-          Lizzie.frame.toggleGtpConsole();
-        }
+        // Disabled: do not auto-popup GTP console
+        // if (!Lizzie.gtpConsole.isVisible()) {
+        //   Lizzie.frame.toggleGtpConsole();
+        // }
         alertEngineDown(
             "Engine process ended unintentionally for some reason.\nYou may find more information in GTP console.");
       }
