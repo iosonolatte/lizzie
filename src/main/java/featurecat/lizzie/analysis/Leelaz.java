@@ -85,7 +85,7 @@ public class Leelaz {
   private boolean switching = false;
   private int currentEngineN = -1;
   private ScheduledExecutorService executor;
-  private boolean isQuittingNormally = false;
+  private volatile boolean isQuittingNormally = false;
   private boolean isDown = false;
 
   // dynamic komi and opponent komi as reported by dynamic-komi version of leelaz
@@ -762,7 +762,9 @@ public class Leelaz {
 
   /** End the process */
   public void shutdown() {
+    isQuittingNormally = true;
     if (process != null) {
+      process.destroy();
       try {
         if (inputStream != null) {
           inputStream.close();
@@ -771,14 +773,13 @@ public class Leelaz {
           outputStream.close();
         }
         process.destroy();
+        // Wait for process to terminate, then force if necessary
         if (!process.waitFor(5, TimeUnit.SECONDS)) {
           process.destroyForcibly();
         }
-      } catch (IOException | InterruptedException e) {
+      } catch (InterruptedException e) {
         process.destroyForcibly();
-        if (e instanceof InterruptedException) {
-          Thread.currentThread().interrupt();
-        }
+        Thread.currentThread().interrupt();
       }
     }
   }
